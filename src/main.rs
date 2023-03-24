@@ -3,7 +3,7 @@ use rocket::{get, post, serde::json::Json};
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::okapi::schemars::JsonSchema;
 use rocket_okapi::settings::UrlObject;
-use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
+use rocket_okapi::{openapi, openapi_get_routes, swagger_ui::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, JsonSchema)]
@@ -105,24 +105,9 @@ async fn main() {
             ],
         )
         .mount(
-            "/swagger-ui/",
+            "/docs/",
             make_swagger_ui(&SwaggerUIConfig {
                 url: "../openapi.json".to_owned(),
-                ..Default::default()
-            }),
-        )
-        .mount(
-            "/rapidoc/",
-            make_rapidoc(&RapiDocConfig {
-                general: GeneralConfig {
-                    spec_urls: vec![UrlObject::new("General", "../openapi.json")],
-                    ..Default::default()
-                },
-                hide_show: HideShowConfig {
-                    allow_spec_url_load: false,
-                    allow_spec_file_load: false,
-                    ..Default::default()
-                },
                 ..Default::default()
             }),
         )
