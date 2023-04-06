@@ -1,0 +1,14 @@
+[[sources]]
+name = "source1"
+id = 1
+url = "https://api.source1.com"
+
+[[sources]]
+name = "source2"
+id = 2
+url = "https://api.source2.com"
+
+[[sources]]
+name = "source3"
+id = 3
+url = "https://api.source3.com"
