@@ -23,6 +23,7 @@ Resources:
 
 Examples:
 GET /sources
+```json
 [
     {
         "uuid": "<uuid of the source>",
@@ -35,8 +36,10 @@ GET /sources
         "url": "https://www.escalade91.fr/",
     }
 ]
+```
 
 GET /places?country=France
+```json
 [
     {
         "uuid": "<uuid of the place>",
@@ -57,8 +60,10 @@ GET /places?country=France
         "country": "France",   
     }
 ]
+```
 
 GET /routes/:place
+```json
 [
     {
         "name": "Route 1",
@@ -83,8 +88,10 @@ GET /routes/:place
         }
     }
 ]
+```
 
 GET /comments/:place/:route
+```json
 [
     {
         "username": "jdoe",
@@ -92,8 +99,10 @@ GET /comments/:place/:route
         "date": "2018-01-01T00:00:00Z"
     }
 ]
+```
 
 GET /progress/:username
+```json
 [
     {
         "route": "<uuid of the route>",
@@ -103,8 +112,10 @@ GET /progress/:username
         "project": true,
     }
 ]
+```
 
 GET /users/
+```json
 [
     {
         "first_name": "John",
@@ -113,3 +124,4 @@ GET /users/
         "email": "john.doe@example.com",
     }
 ]
+```
