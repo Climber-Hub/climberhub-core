@@ -1,14 +1,14 @@
 [[sources]]
-name = "source1"
+name = "Google"
 id = 1
-url = "https://api.source1.com"
+url = "https://www.google.fr"
 
 [[sources]]
-name = "source2"
+name = "Facebook"
 id = 2
-url = "https://api.source2.com"
+url = "https://www.facebook.com"
 
 [[sources]]
-name = "source3"
+name = "Twitter"
 id = 3
-url = "https://api.source3.com"
+url = "https://www.reddit.com"
