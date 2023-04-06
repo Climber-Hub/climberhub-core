@@ -62,10 +62,11 @@ GET /places?country=France
 ]
 ```
 
-GET /routes/:place
+GET /routes/
 ```json
 [
     {
+        "uuid": "<uuid of the route>",
         "name": "Route 1",
         "description": "This is a great route",
         "grade": "6a",
