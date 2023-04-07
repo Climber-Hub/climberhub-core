@@ -1,3 +1,6 @@
+mod common;
+mod config;
+
 pub mod places
 {
     pub mod repository;
