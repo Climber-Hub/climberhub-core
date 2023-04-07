@@ -6,17 +6,53 @@ use rocket_okapi::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-struct User 
+mod data
 {
-    user_id: u64,
-    username: String,
-    #[schemars(example = "example_email")]
-    email: Option<String>,
+    use std::collections::HashMap;
+
+    struct RouteRules
+    {
+        sitstart : bool,
+        modules  : bool,
+        edges    : bool,
+    }
+    struct Route
+    {
+        uuid        : String,
+        name        : String,
+        description : String,
+        grade       : String,
+        color       : String,
+        sector      : String,
+        rules       : RouteRules,
+        tags        : Vec<String>,
+        properties  : HashMap<String, String>,
+    }
+
 }
 
-fn example_email() -> &'static str { "test@example.com" }
+pub struct RoutesBuilder
+{
+    get_all_routes: fn(),
+}
+
+impl RoutesBuilder
+{
+    fn build() -> Rocket<Build>
+    {
+        rocket::build()
+        .mount("/", openapi_get_routes![
+            get_all_users,
+        ])
+        .mount(
+            "/docs/",
+            make_swagger_ui(&SwaggerUIConfig {
+                url: "../openapi.json".to_owned(),
+                ..Default::default()
+            }),
+        )
+    }
+}
 
 /// # Get all users
 ///
@@ -32,20 +68,18 @@ fn get_all_users() -> Json<Vec<User>>
     }])
 }
 
-fn build() -> Rocket<Build>
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+struct User 
 {
-    rocket::build()
-    .mount("/", openapi_get_routes![
-        get_all_users,
-    ])
-    .mount(
-        "/docs/",
-        make_swagger_ui(&SwaggerUIConfig {
-            url: "../openapi.json".to_owned(),
-            ..Default::default()
-        }),
-    )
+    user_id: u64,
+    username: String,
+    #[schemars(example = "example_email")]
+    email: Option<String>,
 }
+
+fn example_email() -> &'static str { "test@example.com" }
 
 pub fn serve()
 {
