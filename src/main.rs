@@ -22,7 +22,8 @@ use contexts::
     users::use_cases::UseCase          as UserUseCase,
 };
 
-fn main()
+#[tokio::main]
+async fn main()
 {
     // TODO: This is not ideal to have multiple instance of the same repository, should think about sharing repo between use_cases
     Server::new(

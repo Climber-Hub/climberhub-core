@@ -2,7 +2,8 @@ use super::config::Config;
 use reqwest;
 use futures::stream::StreamExt;
 
-const REPO_CONFIG: Config = Config::from_file("config.toml");
+const CONCURRENT_REQUESTS: usize = 10;
+pub const CONFIG_PATH: &str = "config.toml";
 
 pub struct RelativeId {
     pub source_id: u16,
@@ -26,47 +27,70 @@ impl RelativeId {
     }
 }
 
-pub struct Manager {
+pub struct Manager<T> {
     config: Config,
     client: reqwest::Client,
-    concurrent_requests: usize
+    _phantom: std::marker::PhantomData<T>,
 }
 
-impl Manager {
-    pub fn new(config: Config) -> Self {
+impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
+    pub fn new(config: Config, client: reqwest::Client) -> Self {
         Self {
             config,
-            client: reqwest::Client::new(),
-            concurrent_requests: 10
+            client,
+            _phantom: std::marker::PhantomData
         }
     }
 
-    pub async fn get(&self, source_id: u16, path: &str) -> String {
+    pub async fn get(&self, source_id: u16, path: &str) -> Option<T> {
         let source = self.config.get_source(source_id).unwrap();
         let url = format!("{}{}", source.url, path);
         let response = self.client.get(&url).send().await;
-        response.unwrap().text().await.unwrap()
+        let body = response.unwrap().text().await.unwrap();
+
+        let object: T = serde_json::from_str(&body).unwrap();
+        Some(object)
     }
 
-    pub async fn dispatch(&self, path: &str) {
-        let bodies = futures::stream::iter(&self.config.sources)
+    pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
+        let results = futures::stream::iter(&self.config.sources)
+            // create a stream of futures
             .map(|source| {
                 let client = &self.client;
                 async move {
-                    let response = client.get(&source.url).send().await?;
-                    response.bytes().await
+                    let url = format!("{}{}", source.url, path);
+                    let response = client.get(&url).send().await;
+                    let body = match response {
+                        Ok(response) => response.text().await,
+                        Err(error) => {
+                            println!("Error: {}", error);
+                            Err(error)
+                        },
+                    };
+                    match body {
+                        Ok(body) => Ok(serde_json::from_str::<Vec<T>>(&body).unwrap()),
+                        Err(error) => {
+                            println!("Error: {}", error);
+                            Err(error)
+                        },
+                    }
                 }
             })
-            .buffer_unordered(self.concurrent_requests);
+            // execute the futures concurrently
+            .buffer_unordered(CONCURRENT_REQUESTS);
 
-        bodies
-            .for_each(|b| async {
-                match b {
-                    Ok(b) => println!("Got {} bytes", b.len()),
-                    Err(e) => eprintln!("Got an error: {}", e),
+        // merges the Vec<T> from the different sources into a single Vec<T>
+        let (successes, failures): (Vec<T>, Vec<reqwest::Error>) = results
+            .fold((Vec::new(), Vec::new()), |mut acc, list| async move {
+                match list {
+                    Ok(list) => acc.0.extend(list),
+                    Err(error) => acc.1.push(error),
                 }
+                acc
             })
             .await;
+
+        (successes, failures)
     }
 }
 
