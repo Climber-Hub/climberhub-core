@@ -1,7 +1,8 @@
 use super::common::{Manager, RelativeId, CONFIG_PATH};
-use super::config::Config;
+use super::config::{Config, Source};
 
-#[derive(Debug, serde::Deserialize)]
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Place {
     pub id: String,
     pub name: String,
@@ -93,87 +94,55 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all() {
-        let mut server1 = mockito::Server::new();
-        let mut server2 = mockito::Server::new();
+        const SOURCES_COUNT: usize = 2;
+        let mut servers: [mockito::ServerGuard; SOURCES_COUNT] = core::array::from_fn(|_| mockito::Server::new());
 
-        let config = Config::from_str(&format!(
-            r#"
-            [[sources]]
-            name = "Test 1"
-            id = 1
-            url = "{}"
-            [[sources]]
-            name = "Test 2"
-            id = 2
-            url = "{}"
-            "#,
-            server1.url(),
-            server2.url(),
-        ));
+        let config = Config {
+            sources: servers.iter().enumerate().map(|(i, server)| {
+                Source {
+                    name: format!("Source {}", i),
+                    id: i as u16,
+                    url: server.url(),
+                }
+            }).collect(),
+        };
 
-        server1.mock("GET", "/places")
-            .with_status(200)
-            .with_header("content-type", "application/json")
-            .with_body(
-                r#"
-                [
-                    {
-                        "id": "0001-00000001",
-                        "name": "COUM",
-                        "description": "Centre Omnisport Universitaire de Moulon",
-                        "address": "8 rue 128",
-                        "postcode": "91190",
-                        "city": "Gif-sur-Yvette",
-                        "country": "France"
-                    },
-                    {
-                        "id": "0001-00000002",
-                        "name": "Bibliothèque",
-                        "description": "Bibliothèque universitaire",
-                        "address": "8 rue 128",
-                        "postcode": "91190",
-                        "city": "Gif-sur-Yvette",
-                        "country": "France"
-                    }
-                ]
-                "#,
-            )
-            .create();
+        const PLACES_COUNT: usize = 2 * SOURCES_COUNT;
+        let places: [Place; PLACES_COUNT] = core::array::from_fn(|i| {
+            let source_id = i / 2;
+            let resource_id = i % 2;
+            Place {
+                id: format!("000{}-0000000{}", source_id + 1, resource_id + 1),
+                name: format!("Place {}", i),
+                description: format!("Description {}", i),
+                address: format!("Address {}", i),
+                postcode: format!("Postcode {}", i),
+                city: format!("City {}", i),
+                country: format!("Country {}", i),
+            }
+        });
 
-        server2.mock("GET", "/places")
-            .with_status(200)
-            .with_header("content-type", "application/json")
-            .with_body(
-                r#"
-                [
-                    {
-                        "id": "0002-00000001",
-                        "name": "Auditorium",
-                        "description": "Auditorium universitaire",
-                        "address": "1 rue des étoiles",
-                        "postcode": "92100",
-                        "city": "Boulogne-Billancourt",
-                        "country": "France"
-                    },
-                    {
-                        "id": "0002-00000002",
-                        "name": "Restaurant",
-                        "description": "Restaurant universitaire",
-                        "address": "18 avenue de la République",
-                        "postcode": "78000",
-                        "city": "Versailles",
-                        "country": "France"
-                    }
-                ]
-                "#,
-            )
-            .create();
+        // each server will get a slice of the places array
+        for (i, server) in servers.iter_mut().enumerate() {
+            let places_slice = &places[i * 2..(i + 1) * 2];
+            server.mock("GET", "/places")
+                .with_status(200)
+                .with_header("content-type", "application/json")
+                .with_body(serde_json::to_string(places_slice).unwrap())
+                .create();
+        }
 
         let manager = Manager::<Place>::new(config, reqwest::Client::new());
-
         let repo = PlacesRepository::new(manager);
+
         let places = repo.get_all().await;
-        assert_eq!(places.len(), 4);
+        
+        // assert all places are present
+        assert_eq!(places.len(), PLACES_COUNT);
+        for place in &places {
+            assert!(places.contains(&place));
+        }
+
         println!("{:?}", places);
     }
 }
