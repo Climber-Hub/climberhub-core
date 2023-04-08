@@ -1,4 +1,4 @@
-use super::{domain::Place, irepository::IRepository};
+use super::{domain::{Place, Filters}, irepository::IRepository};
 
 pub struct UseCase
 {
@@ -13,8 +13,8 @@ impl UseCase
         Self { repository: repo }
     }
     
-    pub fn get_places(&self) -> Vec<Place>
+    pub fn get_places(&self, filters: Filters) -> Vec<Place>
     {
-        self.repository.get_places()
+        self.repository.get_places(filters)
     }    
 }

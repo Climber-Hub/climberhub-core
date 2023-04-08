@@ -1,20 +1,27 @@
-use rocket::{get, serde::json::Json, State};
+use rocket::{get, serde::json::Json, State, FromForm};
 use rocket_okapi::{
     okapi::schemars::{self, JsonSchema},
     openapi,
 };
 use serde::{Deserialize, Serialize};
 
-use super::{use_cases::UseCase, domain_to_router};
+use super::{use_cases::UseCase, domain_to_router, router_to_domain};
 
-/// # Get all places
-///
-/// Returns all places in the system.
-#[openapi(tag = "Places")]
-#[get("/places")]
-pub fn get_places(use_case: &State<UseCase>) -> Json<Vec<Place>> 
+#[derive(FromForm, JsonSchema, Debug)]
+pub struct Filters
 {
-    Json(use_case.get_places()
+    pub country : Option<String>,
+    pub city    : Option<String>,
+}
+
+/// # Get places that match the given filters
+///
+/// Returns all that match the given filters.
+#[openapi(tag = "Places")]
+#[get("/places?<filters..>")]
+pub fn get_places(filters: Filters, use_case: &State<UseCase>) -> Json<Vec<Place>> 
+{
+    Json(use_case.get_places(router_to_domain::filters(filters))
         .into_iter().map(domain_to_router::place).collect())
 }
 

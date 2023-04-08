@@ -8,3 +8,9 @@ pub struct Place
     pub city        : String,
     pub country     : String,
 }
+
+pub struct Filters
+{
+    pub country : Option<String>,
+    pub city    : Option<String>,
+}

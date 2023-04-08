@@ -1,12 +1,12 @@
 use crate::contexts::places::
 {
     irepository::IRepository,
-    domain::Place,
+    domain::{Place, Filters},
 };
 pub struct Repository;
 impl IRepository for Repository
 {
-    fn get_places(&self) -> Vec<Place> 
+    fn get_places(&self, filters: Filters) -> Vec<Place> 
     {
         vec![Place { 
             id          : String::new(),
@@ -14,8 +14,8 @@ impl IRepository for Repository
             description : String::new(),
             address     : String::new(),
             postcode    : String::new(),
-            city        : String::new(),
-            country     : String::new(),
+            city        : filters.city.unwrap_or(String::new()),
+            country     : filters.country.unwrap_or(String::new()),
         }]
 
     }

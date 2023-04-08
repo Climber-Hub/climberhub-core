@@ -7,4 +7,5 @@ pub mod places
 
     mod controller;
     mod domain_to_router;
+    mod router_to_domain;
 }
