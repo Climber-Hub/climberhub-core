@@ -1,37 +1,32 @@
-use rocket::{get, serde::json::Json};
+use rocket::{get, serde::json::Json, State};
 use rocket_okapi::{
     okapi::schemars::{self, JsonSchema},
     openapi,
 };
 use serde::{Deserialize, Serialize};
 
+use super::{use_cases::UseCase, domain_to_router};
+
 /// # Get all places
 ///
 /// Returns all places in the system.
 #[openapi(tag = "Places")]
 #[get("/places")]
-pub fn get_places() -> Json<Vec<Place>> 
+pub fn get_places(use_case: &State<UseCase>) -> Json<Vec<Place>> 
 {
-    Json(vec![Place { 
-        id          : String::new(),
-        name        : String::new(),
-        description : String::new(),
-        address     : String::new(),
-        postcode    : String::new(),
-        city        : String::new(),
-        country     : String::new(),
-    }])
+    Json(use_case.get_places()
+        .into_iter().map(domain_to_router::place).collect())
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Place 
 {
-    id          : String,
-    name        : String,
-    description : String,
-    address     : String,
-    postcode    : String,
-    city        : String,
-    country     : String,
+    pub id          : String,
+    pub name        : String,
+    pub description : String,
+    pub address     : String,
+    pub postcode    : String,
+    pub city        : String,
+    pub country     : String,
 }

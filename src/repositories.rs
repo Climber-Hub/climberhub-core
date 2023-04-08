@@ -1,5 +1,5 @@
-mod places
+pub mod places
 {
-    mod repository;
+    pub mod repository;
 }
 
