@@ -44,7 +44,7 @@ impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
 
     pub async fn get(&self, source_id: u16, path: &str) -> Option<T> {
         let source = self.config.get_source(source_id).unwrap();
-        let url = format!("{}{}", source.url, path);
+        let url = format!("{}/{}", source.url, path);
         let response = self.client.get(&url).send().await;
         let body = response.unwrap().text().await.unwrap();
 
@@ -58,7 +58,7 @@ impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
             .map(|source| {
                 let client = &self.client;
                 async move {
-                    let url = format!("{}{}", source.url, path);
+                    let url = format!("{}/{}", source.url, path);
                     let response = client.get(&url).send().await;
                     let body = match response {
                         Ok(response) => response.text().await,
