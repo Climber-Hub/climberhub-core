@@ -108,7 +108,7 @@ mod tests {
         };
 
         const PLACES_COUNT: usize = 2 * SOURCES_COUNT;
-        let places: [Place; PLACES_COUNT] = core::array::from_fn(|i| {
+        let expected_places: [Place; PLACES_COUNT] = core::array::from_fn(|i| {
             let source_id = i / 2;
             let resource_id = i % 2;
             Place {
@@ -124,7 +124,7 @@ mod tests {
 
         // each server will get a slice of the places array
         for (i, server) in servers.iter_mut().enumerate() {
-            let places_slice = &places[i * 2..(i + 1) * 2];
+            let places_slice = &expected_places[i * 2..(i + 1) * 2];
             server.mock("GET", "/places")
                 .with_status(200)
                 .with_header("content-type", "application/json")
@@ -139,8 +139,8 @@ mod tests {
         
         // assert all places are present
         assert_eq!(places.len(), PLACES_COUNT);
-        for place in &places {
-            assert!(places.contains(&place));
+        for expected_place in &expected_places {
+            assert!(places.contains(&expected_place));
         }
 
         println!("{:?}", places);
