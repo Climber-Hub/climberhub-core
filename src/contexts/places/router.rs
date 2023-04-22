@@ -16,7 +16,7 @@ pub struct Filters
 
 /// # Get places that match the given filters
 ///
-/// Returns all that match the given filters.
+/// Returns all places that match the given filters.
 #[openapi(tag = "Places")]
 #[get("/places?<filters..>")]
 pub fn get_places(filters: Filters, use_case: &State<UseCase>) -> Json<Vec<Place>> 

@@ -7,3 +7,8 @@ pub mod users
 {
     pub mod repository;
 }
+
+pub mod routes
+{
+    pub mod repository;
+}

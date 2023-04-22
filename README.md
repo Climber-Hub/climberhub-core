@@ -73,8 +73,8 @@ GET /routes/:place
         "sector": "R1",
         "rules": [
             "sitstart": false,
-            "w_modules": false,
-            "w_edges": false
+            "modules_allowed": false,
+            "edges_allowed": false
         ],
         "tags": [
             "vertical",

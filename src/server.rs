@@ -7,6 +7,7 @@ use rocket_okapi::{
 use crate::contexts::
 {
     places::use_cases::UseCase as PlaceUseCase,
+    routes::use_cases::UseCase as RouteUseCase,
     users::use_cases::UseCase  as UserUseCase,
 };
 
@@ -19,12 +20,14 @@ impl Server
 {
     pub fn new(
         place_uc : PlaceUseCase,
+        route_uc : RouteUseCase,
         user_uc  : UserUseCase,
     ) -> Self
     {
         Server {
             rocket_build: build()
                 .manage(place_uc)
+                .manage(route_uc)
                 .manage(user_uc)
         }
     }
@@ -55,6 +58,7 @@ fn build() -> Rocket<Build>
     .mount("/", openapi_get_routes![
         crate::contexts::places::router::get_places,
         crate::contexts::users::router::get_users,
+        crate::contexts::routes::router::get_routes,
     ])
     .mount(
         "/docs/",
