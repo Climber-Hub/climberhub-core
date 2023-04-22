@@ -4,7 +4,11 @@ use rocket_okapi::{
     swagger_ui::{make_swagger_ui, SwaggerUIConfig},
 };
 
-use crate::contexts::places::use_cases::UseCase as PlaceUseCase;
+use crate::contexts::
+{
+    places::use_cases::UseCase as PlaceUseCase,
+    users::use_cases::UseCase  as UserUseCase,
+};
 
 pub struct Server
 {
@@ -13,11 +17,15 @@ pub struct Server
 
 impl Server
 {
-    pub fn new(place_uc: PlaceUseCase) -> Self
+    pub fn new(
+        place_uc : PlaceUseCase,
+        user_uc  : UserUseCase,
+    ) -> Self
     {
         Server {
             rocket_build: build()
-                .manage(place_uc),
+                .manage(place_uc)
+                .manage(user_uc)
         }
     }
 
@@ -46,6 +54,7 @@ fn build() -> Rocket<Build>
     rocket::build()
     .mount("/", openapi_get_routes![
         crate::contexts::places::router::get_places,
+        crate::contexts::users::router::get_users,
     ])
     .mount(
         "/docs/",
