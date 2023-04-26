@@ -2,7 +2,16 @@ use super::{domain, router};
 
 pub fn route(r: domain::Route) -> router::Route
 {
-    router::Route 
+    router::Route
+    {
+        id   : route_id(r.id),
+        data : route_data(r.data),
+    }
+}
+
+pub fn route_data(r: domain::RouteData) -> router::RouteData
+{
+    router::RouteData
     {
         name        : r.name,
         description : r.description,
@@ -15,6 +24,7 @@ pub fn route(r: domain::Route) -> router::Route
     }
 }
 
+fn route_id(id: domain::RouteId) -> router::RouteId { id }
 fn rules(r: domain::Rules) -> router::Rules
 {
     router::Rules

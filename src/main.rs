@@ -13,16 +13,19 @@ use repositories::
 
 use contexts::
 {
-    places::use_cases::UseCase as PlaceUseCase,
-    routes::use_cases::UseCase as RouteUseCase,
-    users::use_cases::UseCase  as UserUseCase,
+    places::use_cases::UseCase       as PlaceUseCase,
+    routes::use_cases::get::UseCase  as RouteGetUseCase,
+    routes::use_cases::post::UseCase as RoutePostUseCase,
+    users::use_cases::UseCase        as UserUseCase,
 };
 
 fn main()
 {
+    // TODO: This is not ideal to have multiple instance of the same repository, should think about sharing repo between use_cases
     Server::new(
         PlaceUseCase::new(Box::new(PlaceRepository)),
-        RouteUseCase::new(Box::new(RouteRepository)),
+        RouteGetUseCase::new(Box::new(RouteRepository)),
+        RoutePostUseCase::new(Box::new(RouteRepository)),
         UserUseCase::new(Box::new(UserRepository)),
     ).serve();
 }
