@@ -1,4 +1,4 @@
-use super::common::{Manager, RelativeId, CONFIG_PATH};
+use super::common::{Manager, RelativeId, Identifiable, CONFIG_PATH};
 use super::config::{Config, Source};
 
 
@@ -11,6 +11,16 @@ pub struct Place {
     pub postcode: String,
     pub city: String,
     pub country: String,
+}
+
+impl Identifiable for Place {
+    fn get_id(&self) -> String {
+        self.id.clone()
+    }
+
+    fn set_id(&mut self, id: String) {
+        self.id = id;
+    }
 }
 
 pub struct PlacesRepository {
@@ -67,7 +77,7 @@ mod tests {
             .with_body(
                 r#"
                 {
-                    "id": "0001-00000001",
+                    "id": "00000001",
                     "name": "COUM",
                     "description": "Centre Omnisport Universitaire de Moulon",
                     "address": "8 rue 128",
@@ -100,8 +110,8 @@ mod tests {
         let config = Config {
             sources: servers.iter().enumerate().map(|(i, server)| {
                 Source {
-                    name: format!("Source {}", i),
-                    id: i as u16,
+                    name: format!("Source {}", i + 1),
+                    id: (i + 1) as u16,
                     url: server.url(),
                 }
             }).collect(),
@@ -124,7 +134,20 @@ mod tests {
 
         // each server will get a slice of the places array
         for (i, server) in servers.iter_mut().enumerate() {
-            let places_slice = &expected_places[i * 2..(i + 1) * 2];
+            // places_slice is a slice of the expected_places array with places id mapped to relative id
+            let places_slice = &expected_places[i * 2..(i + 1) * 2].iter().map(|place| {
+                Place {
+                    id: RelativeId::from_str(&place.id).resource_id.to_string(),
+                    name: place.name.clone(),
+                    description: place.description.clone(),
+                    address: place.address.clone(),
+                    postcode: place.postcode.clone(),
+                    city: place.city.clone(),
+                    country: place.country.clone(),
+                }
+            }).collect::<Vec<Place>>();
+            println!("{}: {:?}", i + 1, places_slice);
+            
             server.mock("GET", "/places")
                 .with_status(200)
                 .with_header("content-type", "application/json")

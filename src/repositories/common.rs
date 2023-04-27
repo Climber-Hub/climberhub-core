@@ -14,8 +14,8 @@ impl RelativeId {
     /// Parses a string of the form `FFFF-FFFFFFFF` into a `RelativeId`.
     pub fn from_str(id: &str) -> Self {
         let mut parts = id.split('-');
-        let source_id = u16::from_str_radix(parts.next().unwrap(), 16).unwrap();
-        let resource_id = u32::from_str_radix(parts.next().unwrap(), 16).unwrap();
+        let source_id = u16::from_str_radix(parts.next().unwrap(), 16).expect("Failed to parse source id");
+        let resource_id = u32::from_str_radix(parts.next().unwrap(), 16).expect("Failed to parse resource id");
         Self {
             source_id,
             resource_id,
@@ -27,13 +27,18 @@ impl RelativeId {
     }
 }
 
+pub trait Identifiable {
+    fn get_id(&self) -> String;
+    fn set_id(&mut self, id: String);
+}
+
 pub struct Manager<T> {
     config: Config,
     client: reqwest::Client,
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
+impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
     pub fn new(config: Config, client: reqwest::Client) -> Self {
         Self {
             config,
@@ -42,13 +47,26 @@ impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
         }
     }
 
+    fn to_absolute(&self, object: &mut T, source_id: u16) {
+        object.set_id(RelativeId {
+            source_id,
+            resource_id: object.get_id().parse::<u32>().expect("Failed to parse id"),
+        }.to_string());
+    }
+
+    fn to_relative(&self, object: &mut T) {
+        let relative_id = RelativeId::from_str(&object.get_id());
+        object.set_id(relative_id.resource_id.to_string());
+    }
+
     pub async fn get(&self, source_id: u16, path: &str) -> Option<T> {
         let source = self.config.get_source(source_id).unwrap();
         let url = format!("{}/{}", source.url, path);
         let response = self.client.get(&url).send().await;
         let body = response.unwrap().text().await.unwrap();
 
-        let object: T = serde_json::from_str(&body).unwrap();
+        let mut object: T = serde_json::from_str(&body).unwrap();
+        self.to_absolute(&mut object, source_id);
         Some(object)
     }
 
@@ -68,7 +86,13 @@ impl<T: for<'de> serde::de::Deserialize<'de>> Manager<T> {
                         },
                     };
                     match body {
-                        Ok(body) => Ok(serde_json::from_str::<Vec<T>>(&body).unwrap()),
+                        Ok(body) => {
+                            let mut objects: Vec<T> = serde_json::from_str(&body).unwrap();
+                            for object in &mut objects {
+                                self.to_absolute(object, source.id);
+                            }
+                            Ok(objects)
+                        },
                         Err(error) => {
                             println!("Error: {}", error);
                             Err(error)
