@@ -14,12 +14,8 @@ pub struct Place {
 }
 
 impl Identifiable for Place {
-    fn get_id(&self) -> String {
-        self.id.clone()
-    }
-
-    fn set_id(&mut self, id: String) {
-        self.id = id;
+    fn id(&mut self) -> &mut String {
+        &mut self.id
     }
 }
 

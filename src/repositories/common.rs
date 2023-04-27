@@ -28,8 +28,7 @@ impl RelativeId {
 }
 
 pub trait Identifiable {
-    fn get_id(&self) -> String;
-    fn set_id(&mut self, id: String);
+    fn id(&mut self) -> &mut String;
 }
 
 pub struct Manager<T> {
@@ -48,15 +47,14 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
     }
 
     fn to_absolute(&self, object: &mut T, source_id: u16) {
-        object.set_id(RelativeId {
+        *object.id() = RelativeId {
             source_id,
-            resource_id: object.get_id().parse::<u32>().expect("Failed to parse id"),
-        }.to_string());
+            resource_id: object.id().parse::<u32>().expect("Failed to parse resource id"),
+        }.to_string();
     }
 
     fn to_relative(&self, object: &mut T) {
-        let relative_id = RelativeId::from_str(&object.get_id());
-        object.set_id(relative_id.resource_id.to_string());
+        *object.id() = RelativeId::from_str(&object.id()).resource_id.to_string();
     }
 
     pub async fn get(&self, source_id: u16, path: &str) -> Option<T> {
