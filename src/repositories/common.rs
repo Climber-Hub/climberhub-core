@@ -1,6 +1,6 @@
 use super::config::Config;
-use reqwest;
 use futures::stream::StreamExt;
+use reqwest;
 
 const CONCURRENT_REQUESTS: usize = 10;
 pub const CONFIG_PATH: &str = "config.toml";
@@ -31,6 +31,17 @@ pub trait Identifiable {
     fn id(&mut self) -> &mut String;
 }
 
+macro_rules! impl_identifiable_for {
+    ($type:ty) => {
+        impl Identifiable for $type {
+            fn id(&mut self) -> &mut String {
+                &mut self.id
+            }
+        }
+    };
+}
+pub(crate) use impl_identifiable_for;
+
 pub struct Manager<T> {
     config: Config,
     client: reqwest::Client,
@@ -42,7 +53,7 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
         Self {
             config,
             client,
-            _phantom: std::marker::PhantomData
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -81,7 +92,7 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
                         Err(error) => {
                             println!("Error: {}", error);
                             Err(error)
-                        },
+                        }
                     };
                     match body {
                         Ok(body) => {
@@ -90,11 +101,11 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
                                 self.to_absolute(object, source.id);
                             }
                             Ok(objects)
-                        },
+                        }
                         Err(error) => {
                             println!("Error: {}", error);
                             Err(error)
-                        },
+                        }
                     }
                 }
             })

@@ -1,6 +1,5 @@
-use super::common::{Manager, RelativeId, Identifiable, CONFIG_PATH};
+use super::common::{impl_identifiable_for, Identifiable, Manager, RelativeId, CONFIG_PATH};
 use super::config::{Config, Source};
-
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Place {
@@ -12,12 +11,7 @@ pub struct Place {
     pub city: String,
     pub country: String,
 }
-
-impl Identifiable for Place {
-    fn id(&mut self) -> &mut String {
-        &mut self.id
-    }
-}
+impl_identifiable_for!(Place);
 
 pub struct PlacesRepository {
     manager: Manager<Place>,
@@ -25,9 +19,7 @@ pub struct PlacesRepository {
 
 impl PlacesRepository {
     pub fn new(manager: Manager<Place>) -> Self {
-        Self {
-            manager: manager,
-        }
+        Self { manager: manager }
     }
 
     pub fn default() -> Self {
@@ -66,8 +58,9 @@ mod tests {
             "#,
             server.url(),
         ));
-        
-        server.mock("GET", "/places/1")
+
+        server
+            .mock("GET", "/places/1")
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
@@ -101,16 +94,19 @@ mod tests {
     #[tokio::test]
     async fn test_get_all() {
         const SOURCES_COUNT: usize = 2;
-        let mut servers: [mockito::ServerGuard; SOURCES_COUNT] = core::array::from_fn(|_| mockito::Server::new());
+        let mut servers: [mockito::ServerGuard; SOURCES_COUNT] =
+            core::array::from_fn(|_| mockito::Server::new());
 
         let config = Config {
-            sources: servers.iter().enumerate().map(|(i, server)| {
-                Source {
+            sources: servers
+                .iter()
+                .enumerate()
+                .map(|(i, server)| Source {
                     name: format!("Source {}", i + 1),
                     id: (i + 1) as u16,
                     url: server.url(),
-                }
-            }).collect(),
+                })
+                .collect(),
         };
 
         const PLACES_COUNT: usize = 2 * SOURCES_COUNT;
@@ -131,8 +127,9 @@ mod tests {
         // each server will get a slice of the places array
         for (i, server) in servers.iter_mut().enumerate() {
             // places_slice is a slice of the expected_places array with places id mapped to relative id
-            let places_slice = &expected_places[i * 2..(i + 1) * 2].iter().map(|place| {
-                Place {
+            let places_slice = &expected_places[i * 2..(i + 1) * 2]
+                .iter()
+                .map(|place| Place {
                     id: RelativeId::from_str(&place.id).resource_id.to_string(),
                     name: place.name.clone(),
                     description: place.description.clone(),
@@ -140,11 +137,12 @@ mod tests {
                     postcode: place.postcode.clone(),
                     city: place.city.clone(),
                     country: place.country.clone(),
-                }
-            }).collect::<Vec<Place>>();
+                })
+                .collect::<Vec<Place>>();
             println!("{}: {:?}", i + 1, places_slice);
-            
-            server.mock("GET", "/places")
+
+            server
+                .mock("GET", "/places")
                 .with_status(200)
                 .with_header("content-type", "application/json")
                 .with_body(serde_json::to_string(places_slice).unwrap())
@@ -155,7 +153,7 @@ mod tests {
         let repo = PlacesRepository::new(manager);
 
         let places = repo.get_all().await;
-        
+
         // assert all places are present
         assert_eq!(places.len(), PLACES_COUNT);
         for expected_place in &expected_places {
