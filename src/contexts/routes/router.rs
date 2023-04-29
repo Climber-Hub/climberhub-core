@@ -13,7 +13,7 @@ pub mod get
     };
 
     use super::super::{use_cases::get::UseCase, domain_to_router, router_to_domain};
-    use super::{Route, RouteData, RouteId};
+    use super::{Route, RouteId};
 
     use std::collections::HashMap;
 
@@ -22,11 +22,11 @@ pub mod get
     /// Returns the data of the route that has the given id.
     #[openapi(tag = "routes")]
     #[get("/routes/<id>")]
-    pub fn get_route_by_id(id: RouteId, use_case: &State<UseCase>) -> Result<Json<RouteData>, NotFound<String>>
+    pub fn get_route_by_id(id: RouteId, use_case: &State<UseCase>) -> Result<Json<Route>, NotFound<String>>
     {
         match use_case.get_route_by_id(router_to_domain::route_id(id))
         {
-            Ok(data) => Ok(Json(domain_to_router::route_data(data))),
+            Ok(route) => Ok(Json(domain_to_router::route(route))),
             Err(e) => Err(NotFound(format!("Route with id `{}` was not found.", e.id))),
         }
     }
@@ -39,7 +39,7 @@ pub mod get
     pub fn get_routes(filters: Filters, use_case: &State<UseCase>) -> Json<Vec<Route>> 
     {
         Json(use_case.get_routes(router_to_domain::get::filters(filters))
-        .into_iter().map(domain_to_router::route).collect())
+            .into_iter().map(domain_to_router::route).collect())
     }
 
     #[derive(FromForm, JsonSchema, Debug)]

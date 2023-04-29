@@ -1,6 +1,6 @@
 pub mod get
 {
-    use super::super::{domain::{Route, RouteId, RouteData, get::Filters}, irepository::get::IRepository};
+    use super::super::{domain::{Route, RouteId, get::Filters}, irepository::get::IRepository};
     pub struct UseCase
     {
         repository: Box<dyn IRepository>,
@@ -19,7 +19,7 @@ pub mod get
             self.repository.get_routes(filters)
         }    
 
-        pub fn get_route_by_id(&self, id: RouteId) -> Result<RouteData, NonExistingId>
+        pub fn get_route_by_id(&self, id: RouteId) -> Result<Route, NonExistingId>
         {
             self.repository.get_route_by_id(id)
         }    
@@ -33,7 +33,7 @@ pub mod get
 
 pub mod post
 {
-    use super::super::{domain::{Route, RouteData, RouteId}, irepository::post::IRepository};
+    use super::super::{domain::{Route, RouteData}, irepository::post::IRepository};
     pub struct UseCase
     {
         repository: Box<dyn IRepository>,
@@ -47,14 +47,9 @@ pub mod post
             Self { repository: repo }
         }
 
-        pub fn create_route(&self, route_data: RouteData) -> Result<Route, AlreadyExistingId>
+        pub fn create_route(&self, route_data: RouteData) -> Route
         {
             self.repository.create_route(route_data)
         }     
-    }
-
-    pub struct AlreadyExistingId
-    {
-        pub id: RouteId,
     }
 }

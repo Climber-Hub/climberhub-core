@@ -6,10 +6,10 @@ use rocket_okapi::{
 
 use crate::contexts::
 {
-    places::use_cases::UseCase as PlaceUseCase,
-    routes::use_cases::get::UseCase as RouteGetUseCase,
+    places::use_cases::UseCase       as PlaceUseCase,
+    routes::use_cases::get::UseCase  as RouteGetUseCase,
     routes::use_cases::post::UseCase as RoutePostUseCase,
-    users::use_cases::UseCase  as UserUseCase,
+    users::use_cases::UseCase        as UserUseCase,
 };
 
 pub struct Server
