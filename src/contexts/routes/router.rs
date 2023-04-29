@@ -17,9 +17,9 @@ pub mod get
 
     use std::collections::HashMap;
 
-    /// # Get the data of the route that has the given id
+    /// # Get the route that has the given id
     ///
-    /// Returns the data of the route that has the given id.
+    /// Returns the route that has the given id.
     #[openapi(tag = "routes")]
     #[get("/routes/<id>")]
     pub fn get_route_by_id(id: RouteId, use_case: &State<UseCase>) -> Result<Json<Route>, NotFound<String>>
@@ -55,7 +55,7 @@ pub mod get
 
 pub mod post
 {
-    use rocket::{post, serde::json::Json, State, response::status::Conflict};
+    use rocket::{post, serde::json::Json, State};
     use rocket_okapi::openapi;
 
     use super::super::{use_cases::post::UseCase, domain_to_router, router_to_domain};
@@ -67,13 +67,11 @@ pub mod post
     /// Returns the newly created route with an associated id
     #[openapi(tag = "routes")]
     #[post("/routes", data = "<route_data>")]
-    pub fn create_route(route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<Json<Route>, Conflict<String>>
+    pub fn create_route(route_data: Json<RouteData>, use_case: &State<UseCase>) -> Json<Route>
     {
-        match use_case.create_route(router_to_domain::route_data(route_data.into_inner())) 
-        {
-            Ok(created_route) => Ok(Json(domain_to_router::route(created_route))),
-            Err(e) => Err(Conflict(Some(format!("Route with id `{}` already exists.", e.id)))),
-        }
+        Json(domain_to_router::route(
+            use_case.create_route(router_to_domain::route_data(route_data.into_inner()))
+        ))
     }
 }
 
@@ -83,8 +81,15 @@ pub type RouteId = String;
 #[serde(rename_all = "camelCase")]
 pub struct Route
 {
-    pub id   : RouteId,
-    pub data : RouteData,
+    pub id          : RouteId,
+    pub name        : String,
+    pub description : String,
+    pub grade       : String,
+    pub color       : String,
+    pub sector      : String,
+    pub rules       : Rules,
+    pub tags        : Vec<String>,
+    pub properties  : HashMap<String, String>,
 }
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]
