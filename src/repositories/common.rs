@@ -48,7 +48,7 @@ pub struct Manager<T> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
+impl<T: Identifiable + for<'de> serde::de::Deserialize<'de> + serde::Serialize> Manager<T> {
     pub fn new(config: Config, client: reqwest::Client) -> Self {
         Self {
             config,
@@ -78,6 +78,18 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de>> Manager<T> {
         self.to_absolute(&mut object, source_id);
         Some(object)
     }
+
+    // what source to use? the code below may be wrong
+    // pub async fn post(&self, path: &str, object: &mut T) -> Option<T> {
+    //     let source = self.config.get_source(object.id().parse::<u16>().unwrap()).unwrap();
+    //     let url = format!("{}/{}", source.url, path);
+    //     let response = self.client.post(&url).json(object).send().await;
+    //     let body = response.unwrap().text().await.unwrap();
+
+    //     let mut object: T = serde_json::from_str(&body).unwrap();
+    //     self.to_absolute(&mut object, source.id);
+    //     Some(object)
+    // }
 
     pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
         let results = futures::stream::iter(&self.config.sources)

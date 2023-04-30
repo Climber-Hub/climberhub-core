@@ -1,7 +1,7 @@
 use super::common::{impl_identifiable_for, Identifiable, Manager, RelativeId, CONFIG_PATH};
 use super::config::{Config, Source};
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Place {
     pub id: String,
     pub name: String,
@@ -131,12 +131,7 @@ mod tests {
                 .iter()
                 .map(|place| Place {
                     id: RelativeId::from_str(&place.id).resource_id.to_string(),
-                    name: place.name.clone(),
-                    description: place.description.clone(),
-                    address: place.address.clone(),
-                    postcode: place.postcode.clone(),
-                    city: place.city.clone(),
-                    country: place.country.clone(),
+                    ..place.clone()
                 })
                 .collect::<Vec<Place>>();
             println!("{}: {:?}", i + 1, places_slice);
