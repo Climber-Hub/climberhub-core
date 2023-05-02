@@ -79,17 +79,23 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de> + serde::Serialize> 
         Some(object)
     }
 
-    // what source to use? the code below may be wrong
-    // pub async fn post(&self, path: &str, object: &mut T) -> Option<T> {
-    //     let source = self.config.get_source(object.id().parse::<u16>().unwrap()).unwrap();
-    //     let url = format!("{}/{}", source.url, path);
-    //     let response = self.client.post(&url).json(object).send().await;
-    //     let body = response.unwrap().text().await.unwrap();
+    pub async fn post(&self, source_id: u16, path: &str, object: &mut T, ) -> Option<T> {
+        let source = self.config.get_source(source_id).unwrap();
+        let url = format!("{}/{}", source.url, path);
+        let response = self.client.post(&url).json(object).send().await;
+        let body = response.unwrap().text().await.unwrap();
 
-    //     let mut object: T = serde_json::from_str(&body).unwrap();
-    //     self.to_absolute(&mut object, source.id);
-    //     Some(object)
-    // }
+        let mut object: T = serde_json::from_str(&body).unwrap();
+        self.to_absolute(&mut object, source.id);
+        Some(object)
+    }
+
+    pub async fn delete(&self, source_id: u16, path: &str) -> bool {
+        let source = self.config.get_source(source_id).unwrap();
+        let url = format!("{}/{}", source.url, path);
+        let response = self.client.delete(&url).send().await;
+        response.unwrap().status().is_success()
+    }
 
     pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
         let results = futures::stream::iter(&self.config.sources)
