@@ -4,14 +4,18 @@ use crate::contexts::routes::
 {
     irepository,
     domain::{self, Route, RouteData, RouteId, Rules}, 
-    use_cases::get::NonExistingId,
 };
+use crate::errors::get::{
+    IdError as GetIdError, 
+    Error   as GetError,
+};
+
 pub struct Repository;
 impl irepository::get::IRepository for Repository
 {
-    fn get_routes(&self, filters: domain::get::Filters) -> Vec<Route> 
+    fn get_routes(&self, filters: domain::get::Filters) -> Result<Vec<Route>, GetError> 
     {
-        vec![Route {
+        Ok(vec![Route {
             id   : String::from("0"),
             data : RouteData {
                 name        : String::new(),
@@ -27,12 +31,12 @@ impl irepository::get::IRepository for Repository
                 tags        : filters.tags.clone(),
                 properties  : filters.properties.clone(),
             }
-        }]
+        }])
     }
     
-    fn get_route_by_id(&self, id: RouteId) -> Result<Route, NonExistingId> 
+    fn get_route_by_id(&self, id: RouteId) -> Result<Route, GetIdError> 
     {
-        // Err(NonExistingId { id: id })
+        // Err(NonExistingId(id))
         Ok(Route {
             id   : id,
             data : RouteData {
@@ -53,14 +57,15 @@ impl irepository::get::IRepository for Repository
     }
 }
 
+use crate::errors::post::Error as PostError;
 impl irepository::post::IRepository for Repository
 {
-    fn create_route(&self, route_data: RouteData) -> Route 
+    fn create_route(&self, route_data: RouteData) -> Result<Route, PostError>
     {
-        Route
+        Ok(Route
         {
             id   : RouteId::from("0"),
             data : route_data,
-        }
+        })
     }
 }

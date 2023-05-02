@@ -1,6 +1,7 @@
 mod repositories;
 mod server;
 pub mod contexts;
+pub mod errors;
 
 use server::Server;
 

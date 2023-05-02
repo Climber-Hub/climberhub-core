@@ -1,5 +1,7 @@
 pub mod get
 {
+    use crate::errors::get::{Error, IdError};
+
     use super::super::{domain::{Route, RouteId, get::Filters}, irepository::get::IRepository};
     pub struct UseCase
     {
@@ -14,25 +16,23 @@ pub mod get
             Self { repository: repo }
         }
         
-        pub fn get_routes(&self, filters: Filters) -> Vec<Route>
+        pub fn get_routes(&self, filters: Filters) -> Result<Vec<Route>, Error>
         {
             self.repository.get_routes(filters)
         }    
 
-        pub fn get_route_by_id(&self, id: RouteId) -> Result<Route, NonExistingId>
+        pub fn get_route_by_id(&self, id: RouteId) -> Result<Route, IdError>
         {
             self.repository.get_route_by_id(id)
         }    
         
     }
-    pub struct NonExistingId
-    {
-        pub id: RouteId,
-    }
 }
 
 pub mod post
 {
+    use crate::errors::post::Error;
+
     use super::super::{domain::{Route, RouteData}, irepository::post::IRepository};
     pub struct UseCase
     {
@@ -47,7 +47,7 @@ pub mod post
             Self { repository: repo }
         }
 
-        pub fn create_route(&self, route_data: RouteData) -> Route
+        pub fn create_route(&self, route_data: RouteData) -> Result<Route, Error>
         {
             self.repository.create_route(route_data)
         }     
