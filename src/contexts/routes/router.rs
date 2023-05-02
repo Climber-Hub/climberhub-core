@@ -113,6 +113,34 @@ pub mod put
     }
 }
 
+pub mod delete
+{
+    use rocket::http::Status;
+    use rocket::response::status::{self, Custom};
+    use rocket::{delete, State};
+    use rocket_okapi::openapi;
+
+    use crate::errors::delete::Error;
+
+    use super::super::{use_cases::delete::UseCase, router_to_domain};
+
+    use super::RouteId;
+
+    /// # Delete an existing route
+    #[openapi(tag = "routes")]
+    #[delete("/routes/<id>")]
+    pub fn delete_route(id: RouteId, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
+    {
+        
+        match use_case.delete_route(router_to_domain::route_id(id))
+        {
+            Ok(()) => Ok(status::NoContent),
+            Err(Error::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
+            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in update_route()"))),
+        }
+    }
+}
+
 pub type RouteId = String;
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]

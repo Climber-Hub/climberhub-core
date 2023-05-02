@@ -79,3 +79,13 @@ impl irepository::put::IRepository for Repository
         // Err(PutError::NonExistingId(_id))
     }
 }
+
+use crate::errors::delete::Error as DeleteError;
+impl irepository::delete::IRepository for Repository
+{
+    fn delete_route(&self, _id: RouteId) -> Result<(), DeleteError> 
+    {
+        Ok(())
+        // Err(PutError::NonExistingId(_id))
+    }
+}

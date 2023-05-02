@@ -14,11 +14,12 @@ use repositories::
 
 use contexts::
 {
-    places::use_cases::UseCase       as PlaceUseCase,
-    routes::use_cases::get::UseCase  as RouteGetUseCase,
-    routes::use_cases::post::UseCase as RoutePostUseCase,
-    routes::use_cases::put::UseCase  as RoutePutUseCase,
-    users::use_cases::UseCase        as UserUseCase,
+    places::use_cases::UseCase         as PlaceUseCase,
+    routes::use_cases::get::UseCase    as RouteGetUseCase,
+    routes::use_cases::post::UseCase   as RoutePostUseCase,
+    routes::use_cases::put::UseCase    as RoutePutUseCase,
+    routes::use_cases::delete::UseCase as RouteDeleteUseCase,
+    users::use_cases::UseCase          as UserUseCase,
 };
 
 fn main()
@@ -29,6 +30,7 @@ fn main()
         RouteGetUseCase::new(Box::new(RouteRepository)),
         RoutePostUseCase::new(Box::new(RouteRepository)),
         RoutePutUseCase::new(Box::new(RouteRepository)),
+        RouteDeleteUseCase::new(Box::new(RouteRepository)),
         UserUseCase::new(Box::new(UserRepository)),
     ).serve();
 }

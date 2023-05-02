@@ -6,11 +6,12 @@ use rocket_okapi::{
 
 use crate::contexts::
 {
-    places::use_cases::UseCase       as PlaceUseCase,
-    routes::use_cases::get::UseCase  as RouteGetUseCase,
-    routes::use_cases::post::UseCase as RoutePostUseCase,
-    routes::use_cases::put::UseCase  as RoutePutUseCase,
-    users::use_cases::UseCase        as UserUseCase,
+    places::use_cases::UseCase         as PlaceUseCase,
+    routes::use_cases::get::UseCase    as RouteGetUseCase,
+    routes::use_cases::post::UseCase   as RoutePostUseCase,
+    routes::use_cases::put::UseCase    as RoutePutUseCase,
+    routes::use_cases::delete::UseCase as RouteDeleteUseCase,
+    users::use_cases::UseCase          as UserUseCase,
 };
 
 pub struct Server
@@ -25,6 +26,7 @@ impl Server
         route_get_uc  : RouteGetUseCase,
         route_post_uc : RoutePostUseCase,
         route_put_uc  : RoutePutUseCase,
+        route_del_uc  : RouteDeleteUseCase,
         user_uc       : UserUseCase,
     ) -> Self
     {
@@ -34,6 +36,7 @@ impl Server
                 .manage(route_get_uc)
                 .manage(route_post_uc)
                 .manage(route_put_uc)
+                .manage(route_del_uc)
                 .manage(user_uc)
         }
     }
@@ -68,6 +71,7 @@ fn build() -> Rocket<Build>
         crate::contexts::routes::router::get::get_route_by_id,
         crate::contexts::routes::router::post::create_route,
         crate::contexts::routes::router::put::update_route,
+        crate::contexts::routes::router::delete::delete_route,
     ])
     .mount(
         "/docs/",
