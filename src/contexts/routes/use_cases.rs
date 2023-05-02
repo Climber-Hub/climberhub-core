@@ -53,3 +53,53 @@ pub mod post
         }     
     }
 }
+
+pub mod put
+{
+    use crate::errors::put::Error;
+
+    use super::super::{domain::{RouteData, RouteId}, irepository::put::IRepository};
+    pub struct UseCase
+    {
+        repository: Box<dyn IRepository>,
+    }
+    unsafe impl Send for UseCase {}
+    unsafe impl Sync for UseCase {}
+    impl UseCase
+    {
+        pub fn new(repo: Box<dyn IRepository>) -> Self
+        {
+            Self { repository: repo }
+        }
+
+        pub fn update_route(&self, id: RouteId, route_data: RouteData) -> Result<(), Error>
+        {
+            self.repository.update_route(id, route_data)
+        }     
+    }
+}
+
+pub mod delete
+{
+    use crate::errors::delete::Error;
+
+    use super::super::{domain::RouteId, irepository::delete::IRepository};
+    pub struct UseCase
+    {
+        repository: Box<dyn IRepository>,
+    }
+    unsafe impl Send for UseCase {}
+    unsafe impl Sync for UseCase {}
+    impl UseCase
+    {
+        pub fn new(repo: Box<dyn IRepository>) -> Self
+        {
+            Self { repository: repo }
+        }
+
+        pub fn delete_route(&self, id: RouteId) -> Result<(), Error>
+        {
+            self.repository.delete_route(id)
+        }     
+    }
+}

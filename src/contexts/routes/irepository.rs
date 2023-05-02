@@ -25,10 +25,10 @@ pub mod put
 {
     use crate::errors::put::Error;
 
-    use super::super::domain::Route;
+    use super::super::domain::{RouteId, RouteData};
     pub trait IRepository
     {
-        fn update_route(&self, route: Route) -> Result<Route, Error>;
+        fn update_route(&self, id: RouteId, data: RouteData) -> Result<(), Error>;
     }
 }
 

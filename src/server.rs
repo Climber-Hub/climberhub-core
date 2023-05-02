@@ -9,6 +9,7 @@ use crate::contexts::
     places::use_cases::UseCase       as PlaceUseCase,
     routes::use_cases::get::UseCase  as RouteGetUseCase,
     routes::use_cases::post::UseCase as RoutePostUseCase,
+    routes::use_cases::put::UseCase  as RoutePutUseCase,
     users::use_cases::UseCase        as UserUseCase,
 };
 
@@ -23,6 +24,7 @@ impl Server
         place_uc      : PlaceUseCase,
         route_get_uc  : RouteGetUseCase,
         route_post_uc : RoutePostUseCase,
+        route_put_uc  : RoutePutUseCase,
         user_uc       : UserUseCase,
     ) -> Self
     {
@@ -31,6 +33,7 @@ impl Server
                 .manage(place_uc)
                 .manage(route_get_uc)
                 .manage(route_post_uc)
+                .manage(route_put_uc)
                 .manage(user_uc)
         }
     }
@@ -64,6 +67,7 @@ fn build() -> Rocket<Build>
         crate::contexts::routes::router::get::get_routes,
         crate::contexts::routes::router::get::get_route_by_id,
         crate::contexts::routes::router::post::create_route,
+        crate::contexts::routes::router::put::update_route,
     ])
     .mount(
         "/docs/",

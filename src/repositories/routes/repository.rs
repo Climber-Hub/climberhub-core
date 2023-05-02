@@ -69,3 +69,13 @@ impl irepository::post::IRepository for Repository
         })
     }
 }
+
+use crate::errors::put::Error as PutError;
+impl irepository::put::IRepository for Repository
+{
+    fn update_route(&self, _id: RouteId, _data: RouteData) -> Result<(), PutError> 
+    {
+        Ok(())
+        // Err(PutError::NonExistingId(_id))
+    }
+}

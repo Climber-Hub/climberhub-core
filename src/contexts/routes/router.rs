@@ -85,6 +85,34 @@ pub mod post
     }
 }
 
+pub mod put
+{
+    use rocket::http::Status;
+    use rocket::response::status::{self, Custom};
+    use rocket::{put, serde::json::Json, State};
+    use rocket_okapi::openapi;
+
+    use crate::errors::put::Error;
+
+    use super::super::{use_cases::put::UseCase, router_to_domain};
+
+    use super::{RouteData, RouteId};
+
+    /// # Update an existing route
+    #[openapi(tag = "routes")]
+    #[put("/routes/<id>", data = "<route_data>")]
+    pub fn update_route(id: RouteId, route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
+    {
+        
+        match use_case.update_route(router_to_domain::route_id(id), router_to_domain::route_data(route_data.into_inner()))
+        {
+            Ok(()) => Ok(status::NoContent),
+            Err(Error::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
+            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in update_route()"))),
+        }
+    }
+}
+
 pub type RouteId = String;
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]

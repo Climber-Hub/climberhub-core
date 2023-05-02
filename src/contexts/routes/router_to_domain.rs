@@ -4,14 +4,14 @@ pub fn route_id(id: router::RouteId) -> domain::RouteId { id }
 pub fn route_data(rd: router::RouteData) -> domain::RouteData
 {
     domain::RouteData { 
-        name        : rd.name ,
-        description : rd.description ,
-        grade       : rd.grade ,
-        color       : rd.color ,
-        sector      : rd.sector ,
-        rules       : rules(rd.rules) ,
-        tags        : rd.tags ,
-        properties  : rd.properties ,
+        name        : rd.name,
+        description : rd.description,
+        grade       : rd.grade,
+        color       : rd.color,
+        sector      : rd.sector,
+        rules       : rules(rd.rules),
+        tags        : rd.tags,
+        properties  : rd.properties,
      }
 }
 
