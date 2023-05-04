@@ -1,7 +1,8 @@
 use serde::Deserialize;
 use std::fs;
+use std::env;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Source {
     pub id: u16,
     pub name: String,
@@ -20,6 +21,11 @@ impl Config {
 
     pub fn from_file(path: &str) -> Self {
         Self::from_str(&fs::read_to_string(path).expect("Unable to read file to string"))
+    }
+
+    pub fn from_env() -> Self {
+        let config_path = env::var("CLIMBHUB_CONFIG").expect("CLIMBHUB_CONFIG not set");
+        Self::from_file(&config_path)
     }
 
     pub fn get_source(&self, id: u16) -> Option<&Source> {

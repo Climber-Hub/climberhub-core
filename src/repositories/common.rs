@@ -1,9 +1,8 @@
-use super::config::Config;
+use super::config::{Config, Source};
 use futures::stream::StreamExt;
 use reqwest;
 
 const CONCURRENT_REQUESTS: usize = 10;
-pub const CONFIG_PATH: &str = "config.toml";
 
 pub struct RelativeId {
     pub source_id: u16,
@@ -48,7 +47,7 @@ pub struct Manager<T> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Identifiable + for<'de> serde::de::Deserialize<'de> + serde::Serialize> Manager<T> {
+impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T> {
     pub fn new(config: Config, client: reqwest::Client) -> Self {
         Self {
             config,
@@ -97,43 +96,43 @@ impl<T: Identifiable + for<'de> serde::de::Deserialize<'de> + serde::Serialize> 
         response.unwrap().status().is_success()
     }
 
-    pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
-        let results = futures::stream::iter(&self.config.sources)
-            // create a stream of futures
-            .map(|source| {
-                let client = &self.client;
-                async move {
-                    let url = format!("{}/{}", source.url, path);
-                    let response = client.get(&url).send().await;
-                    let body = match response {
-                        Ok(response) => response.text().await,
-                        Err(error) => {
-                            println!("Error: {}", error);
-                            Err(error)
-                        }
-                    };
-                    match body {
-                        Ok(body) => {
-                            let mut objects: Vec<T> = serde_json::from_str(&body).unwrap();
-                            for object in &mut objects {
-                                self.to_absolute(object, source.id);
-                            }
-                            Ok(objects)
-                        }
-                        Err(error) => {
-                            println!("Error: {}", error);
-                            Err(error)
-                        }
-                    }
+    async fn get_objects(&self, source: Source, path: &str) -> Result<Vec<T>, reqwest::Error> {
+        let client = &self.client;
+        let url = format!("{}/{}", source.url, path);
+        let response = client.get(&url).send().await;
+        let body = match response {
+            Ok(response) => response.text().await,
+            Err(error) => {
+                println!("Error: {}", error);
+                Err(error)
+            }
+        };
+        match body {
+            Ok(body) => {
+                let mut objects: Vec<T> = serde_json::from_str(&body).unwrap();
+                for object in &mut objects {
+                    self.to_absolute(object, source.id);
                 }
-            })
+                Ok(objects)
+            }
+            Err(error) => {
+                println!("Error: {}", error);
+                Err(error)
+            }
+        }
+    }
+
+    pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
+        let results = futures::stream::iter(self.config.sources.clone())
+            // create a stream of futures
+            .map( move |source| async move { self.get_objects(source, path) })
             // execute the futures concurrently
             .buffer_unordered(CONCURRENT_REQUESTS);
 
         // merges the Vec<T> from the different sources into a single Vec<T>
         let (successes, failures): (Vec<T>, Vec<reqwest::Error>) = results
             .fold((Vec::new(), Vec::new()), |mut acc, list| async move {
-                match list {
+                match list.await {
                     Ok(list) => acc.0.extend(list),
                     Err(error) => acc.1.push(error),
                 }
