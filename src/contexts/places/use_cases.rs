@@ -6,15 +6,15 @@ pub struct UseCase
 }
 unsafe impl Send for UseCase {}
 unsafe impl Sync for UseCase {}
-impl UseCase 
+impl UseCase
 {
     pub fn new(repo: Box<dyn IRepository>) -> Self
     {
         Self { repository: repo }
     }
     
-    pub fn get_places(&self, filters: Filters) -> Vec<Place>
+    pub async fn get_places(&self, filters: Filters) -> Vec<Place>
     {
-        self.repository.get_places(filters)
+        self.repository.get_places(filters).await
     }    
 }

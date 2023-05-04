@@ -1,6 +1,7 @@
 use super::domain::{Place, Filters};
 
-pub trait IRepository
+#[async_trait::async_trait]
+pub trait IRepository : Send + Sync
 {
-    fn get_places(&self, filters: Filters) -> Vec<Place>;
+    async fn get_places(&self, filters: Filters) -> Vec<Place>;
 }

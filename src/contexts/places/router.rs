@@ -19,9 +19,9 @@ pub struct Filters
 /// Returns all places that match the given filters.
 #[openapi(tag = "Places")]
 #[get("/places?<filters..>")]
-pub fn get_places(filters: Filters, use_case: &State<UseCase>) -> Json<Vec<Place>> 
+pub async fn get_places(filters: Filters, use_case: &State<UseCase>) -> Json<Vec<Place>> 
 {
-    Json(use_case.get_places(router_to_domain::filters(filters))
+    Json(use_case.get_places(router_to_domain::filters(filters)).await
         .into_iter().map(domain_to_router::place).collect())
 }
 
