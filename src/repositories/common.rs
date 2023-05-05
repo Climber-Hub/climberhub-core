@@ -103,20 +103,25 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
         let body = match response {
             Ok(response) => response.text().await,
             Err(error) => {
-                println!("Error: {}", error);
+                eprintln!("Error: {}", error);
                 Err(error)
             }
         };
         match body {
-            Ok(body) => {
-                let mut objects: Vec<T> = serde_json::from_str(&body).unwrap();
-                for object in &mut objects {
-                    self.to_absolute(object, source.id);
+            Ok(body) => match serde_json::from_str(&body) {
+                Ok(mut objects) => {
+                    for object in &mut objects {
+                        self.to_absolute(object, source.id);
+                    }
+                    Ok(objects)
                 }
-                Ok(objects)
+                Err(error) => {
+                    eprintln!("Deserialization error: {}", error);
+                    panic!("Deserialization failed.") // TODO: Report an internal server error
+                }
             }
             Err(error) => {
-                println!("Error: {}", error);
+                eprintln!("Error: {}", error);
                 Err(error)
             }
         }
@@ -125,13 +130,13 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
     pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
         let results = futures::stream::iter(self.config.sources.clone())
             // create a stream of futures
-            .map( move |source| async move { self.get_objects(source, path) })
+            .map(|source| async { self.get_objects(source, path) })
             // execute the futures concurrently
             .buffer_unordered(CONCURRENT_REQUESTS);
 
         // merges the Vec<T> from the different sources into a single Vec<T>
         let (successes, failures): (Vec<T>, Vec<reqwest::Error>) = results
-            .fold((Vec::new(), Vec::new()), |mut acc, list| async move {
+            .fold((Vec::new(), Vec::new()), |mut acc, list| async {
                 match list.await {
                     Ok(list) => acc.0.extend(list),
                     Err(error) => acc.1.push(error),
