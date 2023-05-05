@@ -85,33 +85,84 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
         *object.id() = RelativeId::from_str(&object.id()).resource_id.to_string();
     }
 
-    pub async fn get(&self, source_id: u16, path: &str) -> Option<T> {
-        let source = self.config.get_source(source_id).unwrap();
+    pub async fn get(&self, source_id: u16, path: &str) -> Result<T, FetchError> {
+        let source = self.config.get_source(source_id).expect(&format!("Couldn't find a source with id {}", source_id));
         let url = format!("{}/{}", source.url, path);
         let response = self.client.get(&url).send().await;
-        let body = response.unwrap().text().await.unwrap();
+        
+        let body = match response {
+            Ok(response) => {
+                match response.text().await {
+                    Ok(body) => body,
+                    Err(error) => {
+                        eprintln!("Error: {}", error);
+                        return Err(FetchError::from(error));
+                    }
+                }
+            },
+            Err(error) => {
+                eprintln!("Error: {}", error);
+                return Err(FetchError::from(error))
+            }
+        };
 
-        let mut object: T = serde_json::from_str(&body).unwrap();
+        let mut object: T = match serde_json::from_str(&body) {
+            Ok(object) => object,
+            Err(error) => {
+                eprintln!("Deserialization error: {}", error);
+                return Err(FetchError::from(error));
+            }
+        };
+
         self.to_absolute(&mut object, source_id);
-        Some(object)
+        Ok(object)
     }
 
-    pub async fn post(&self, source_id: u16, path: &str, object: &mut T, ) -> Option<T> {
-        let source = self.config.get_source(source_id).unwrap();
+    pub async fn post(&self, source_id: u16, path: &str, object: &mut T, ) -> Result<T, FetchError> {
+        let source = self.config.get_source(source_id).expect(&format!("Couldn't find a source with id {}", source_id));
         let url = format!("{}/{}", source.url, path);
         let response = self.client.post(&url).json(object).send().await;
-        let body = response.unwrap().text().await.unwrap();
 
-        let mut object: T = serde_json::from_str(&body).unwrap();
+        let body = match response {
+            Ok(response) => {
+                match response.text().await {
+                    Ok(body) => body,
+                    Err(error) => {
+                        eprintln!("Error: {}", error);
+                        return Err(FetchError::from(error));
+                    }
+                }
+            },
+            Err(error) => {
+                eprintln!("Error: {}", error);
+                return Err(FetchError::from(error))
+            }
+        };
+
+        let mut object: T = match serde_json::from_str(&body) {
+            Ok(object) => object,
+            Err(error) => {
+                eprintln!("Deserialization error: {}", error);
+                return Err(FetchError::from(error));
+            }
+        };
+
         self.to_absolute(&mut object, source.id);
-        Some(object)
+        Ok(object)
     }
 
-    pub async fn delete(&self, source_id: u16, path: &str) -> bool {
-        let source = self.config.get_source(source_id).unwrap();
+    pub async fn delete(&self, source_id: u16, path: &str) -> Result<bool, FetchError> {
+        let source = self.config.get_source(source_id).expect(&format!("Couldn't find a source with id {}", source_id));
         let url = format!("{}/{}", source.url, path);
         let response = self.client.delete(&url).send().await;
-        response.unwrap().status().is_success()
+
+        match response {
+            Ok(response) => Ok(response.status().is_success()),
+            Err(error) => {
+                eprintln!("Error: {}", error);
+                Err(FetchError::from(error))
+            }
+        }
     }
 
     async fn get_objects(&self, source: Source, path: &str) -> Result<Vec<T>, FetchError> {
