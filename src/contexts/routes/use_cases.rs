@@ -16,14 +16,14 @@ pub mod get
             Self { repository: repo }
         }
         
-        pub fn get_routes(&self, filters: Filters) -> Result<Vec<Route>, Error>
+        pub async fn get_routes(&self, filters: Filters) -> Result<Vec<Route>, Error>
         {
-            self.repository.get_routes(filters)
+            self.repository.get_routes(filters).await
         }    
 
-        pub fn get_route_by_id(&self, id: RouteId) -> Result<Route, IdError>
+        pub async fn get_route_by_id(&self, id: RouteId) -> Result<Route, IdError>
         {
-            self.repository.get_route_by_id(id)
+            self.repository.get_route_by_id(id).await
         }    
         
     }
@@ -47,9 +47,9 @@ pub mod post
             Self { repository: repo }
         }
 
-        pub fn create_route(&self, route_data: RouteData) -> Result<Route, Error>
+        pub async fn create_route(&self, route_data: RouteData) -> Result<Route, Error>
         {
-            self.repository.create_route(route_data)
+            self.repository.create_route(route_data).await
         }     
     }
 }
@@ -72,9 +72,9 @@ pub mod put
             Self { repository: repo }
         }
 
-        pub fn update_route(&self, id: RouteId, route_data: RouteData) -> Result<(), Error>
+        pub async fn update_route(&self, id: RouteId, route_data: RouteData) -> Result<(), Error>
         {
-            self.repository.update_route(id, route_data)
+            self.repository.update_route(id, route_data).await
         }     
     }
 }
@@ -97,9 +97,9 @@ pub mod delete
             Self { repository: repo }
         }
 
-        pub fn delete_route(&self, id: RouteId) -> Result<(), Error>
+        pub async fn delete_route(&self, id: RouteId) -> Result<(), Error>
         {
-            self.repository.delete_route(id)
+            self.repository.delete_route(id).await
         }     
     }
 }

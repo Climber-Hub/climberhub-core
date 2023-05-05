@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use async_trait::async_trait;
 
 use crate::contexts::routes::
 {
@@ -11,9 +12,10 @@ use crate::errors::get::{
 };
 
 pub struct Repository;
+#[async_trait]
 impl irepository::get::IRepository for Repository
 {
-    fn get_routes(&self, filters: domain::get::Filters) -> Result<Vec<Route>, GetError> 
+    async fn get_routes(&self, filters: domain::get::Filters) -> Result<Vec<Route>, GetError> 
     {
         Ok(vec![Route {
             id   : String::from("0"),
@@ -34,7 +36,7 @@ impl irepository::get::IRepository for Repository
         }])
     }
     
-    fn get_route_by_id(&self, id: RouteId) -> Result<Route, GetIdError> 
+    async fn get_route_by_id(&self, id: RouteId) -> Result<Route, GetIdError> 
     {
         // Err(NonExistingId(id))
         Ok(Route {
@@ -58,9 +60,10 @@ impl irepository::get::IRepository for Repository
 }
 
 use crate::errors::post::Error as PostError;
+#[async_trait]
 impl irepository::post::IRepository for Repository
 {
-    fn create_route(&self, route_data: RouteData) -> Result<Route, PostError>
+    async fn create_route(&self, route_data: RouteData) -> Result<Route, PostError>
     {
         Ok(Route
         {
@@ -71,9 +74,10 @@ impl irepository::post::IRepository for Repository
 }
 
 use crate::errors::put::Error as PutError;
+#[async_trait]
 impl irepository::put::IRepository for Repository
 {
-    fn update_route(&self, _id: RouteId, _data: RouteData) -> Result<(), PutError> 
+    async fn update_route(&self, _id: RouteId, _data: RouteData) -> Result<(), PutError> 
     {
         Ok(())
         // Err(PutError::NonExistingId(_id))
@@ -81,9 +85,10 @@ impl irepository::put::IRepository for Repository
 }
 
 use crate::errors::delete::Error as DeleteError;
+#[async_trait]
 impl irepository::delete::IRepository for Repository
 {
-    fn delete_route(&self, _id: RouteId) -> Result<(), DeleteError> 
+    async fn delete_route(&self, _id: RouteId) -> Result<(), DeleteError> 
     {
         Ok(())
         // Err(PutError::NonExistingId(_id))
