@@ -6,16 +6,13 @@ use crate::contexts::routes::
     irepository,
     domain::{self, Route, RouteData, RouteId, Rules}, 
 };
-use crate::errors::get::{
-    IdError as GetIdError, 
-    Error   as GetError,
-};
+use crate::errors::{GetError, GetAllError};
 
 pub struct Repository;
 #[async_trait]
 impl irepository::get::IRepository for Repository
 {
-    async fn get_routes(&self, filters: domain::get::Filters) -> Result<Vec<Route>, GetError> 
+    async fn get_all(&self, filters: domain::get::Filters) -> Result<Vec<Route>, GetAllError> 
     {
         Ok(vec![Route {
             id   : String::from("0"),
@@ -36,7 +33,7 @@ impl irepository::get::IRepository for Repository
         }])
     }
     
-    async fn get_route_by_id(&self, id: RouteId) -> Result<Route, GetIdError> 
+    async fn get(&self, id: RouteId) -> Result<Route, GetError> 
     {
         // Err(NonExistingId(id))
         Ok(Route {
@@ -59,11 +56,11 @@ impl irepository::get::IRepository for Repository
     }
 }
 
-use crate::errors::post::Error as PostError;
+use crate::errors::CreateError;
 #[async_trait]
 impl irepository::post::IRepository for Repository
 {
-    async fn create_route(&self, route_data: RouteData) -> Result<Route, PostError>
+    async fn create(&self, route_data: RouteData) -> Result<Route, CreateError>
     {
         Ok(Route
         {
@@ -73,24 +70,24 @@ impl irepository::post::IRepository for Repository
     }
 }
 
-use crate::errors::put::Error as PutError;
+use crate::errors::UpdateError;
 #[async_trait]
 impl irepository::put::IRepository for Repository
 {
-    async fn update_route(&self, _id: RouteId, _data: RouteData) -> Result<(), PutError> 
+    async fn update(&self, _id: RouteId, _data: RouteData) -> Result<(), UpdateError> 
     {
         Ok(())
-        // Err(PutError::NonExistingId(_id))
+        // Err(NonExistingId(_id))
     }
 }
 
-use crate::errors::delete::Error as DeleteError;
+use crate::errors::DeleteError;
 #[async_trait]
 impl irepository::delete::IRepository for Repository
 {
-    async fn delete_route(&self, _id: RouteId) -> Result<(), DeleteError> 
+    async fn delete(&self, _id: RouteId) -> Result<(), DeleteError> 
     {
         Ok(())
-        // Err(PutError::NonExistingId(_id))
+        // Err(NonExistingId(_id))
     }
 }

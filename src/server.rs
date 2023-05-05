@@ -67,8 +67,8 @@ fn build() -> Rocket<Build>
     .mount("/", openapi_get_routes![
         crate::contexts::places::router::get_places,
         crate::contexts::users::router::get_users,
-        crate::contexts::routes::router::get::get_routes,
-        crate::contexts::routes::router::get::get_route_by_id,
+        crate::contexts::routes::router::get::get_all_routes,
+        crate::contexts::routes::router::get::get_route,
         crate::contexts::routes::router::post::create_route,
         crate::contexts::routes::router::put::update_route,
         crate::contexts::routes::router::delete::delete_route,

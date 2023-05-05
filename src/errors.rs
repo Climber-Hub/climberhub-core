@@ -1,31 +1,24 @@
-pub mod get
+pub enum GetAllError
 {
-    pub enum Error
-    {
-    }
+    InternalServerError,
+}
 
-    pub enum IdError
-    {
-        NonExistingId(String),
-    }
-}
-pub mod post
+pub enum GetError
 {
-    pub enum Error
-    {
-    }
+    NonExistingId(String),
+    InternalServerError,
 }
-pub mod put
+pub enum CreateError
 {
-    pub enum Error
-    {
-        NonExistingId(String),
-    }
+    InternalServerError,
 }
-pub mod delete
+pub enum UpdateError
 {
-    pub enum Error
-    {
-        NonExistingId(String),
-    }
+    NonExistingId(String),
+    InternalServerError,
+}
+pub enum DeleteError
+{
+    NonExistingId(String),
+    InternalServerError,
 }
