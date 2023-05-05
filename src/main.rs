@@ -25,9 +25,9 @@ fn main()
     // TODO: This is not ideal to have multiple instance of the same repository, should think about sharing repo between use_cases
     Server::new(
         PlaceGetUseCase::new(Box::new(PlaceRepository::default())),
-        RouteGetUseCase::new(Box::new(RouteRepository)),
-        RoutePostUseCase::new(Box::new(RouteRepository)),
-        RoutePutUseCase::new(Box::new(RouteRepository)),
-        RouteDeleteUseCase::new(Box::new(RouteRepository)),
+        RouteGetUseCase::new(Box::new(RouteRepository::default())),
+        RoutePostUseCase::new(Box::new(RouteRepository::default())),
+        RoutePutUseCase::new(Box::new(RouteRepository::default())),
+        RouteDeleteUseCase::new(Box::new(RouteRepository::default())),
     ).serve();
 }

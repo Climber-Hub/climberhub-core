@@ -21,7 +21,7 @@ pub struct Server
 impl Server
 {
     pub fn new(
-        place_uc      : PlaceGetUseCase,
+        place_get_uc  : PlaceGetUseCase,
         route_get_uc  : RouteGetUseCase,
         route_post_uc : RoutePostUseCase,
         route_put_uc  : RoutePutUseCase,
@@ -30,7 +30,7 @@ impl Server
     {
         Server {
             rocket_build: build()
-                .manage(place_uc)
+                .manage(place_get_uc)
                 .manage(route_get_uc)
                 .manage(route_post_uc)
                 .manage(route_put_uc)
