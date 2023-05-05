@@ -99,7 +99,7 @@ impl IRepository for Repository {
 
         // print errors to stderr
         for e in errors {
-            eprintln!("{}", e);
+            eprintln!("{:#?}", e);
         }
 
         places
