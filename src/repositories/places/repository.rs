@@ -105,7 +105,7 @@ impl irepository::get::IRepository for Repository {
 
         // print errors to stderr
         for e in errors {
-            eprintln!("{}", e);
+            eprintln!("{:#?}", e);
         }
 
         let places_list = places

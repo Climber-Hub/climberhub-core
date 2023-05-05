@@ -41,6 +41,24 @@ macro_rules! impl_identifiable_for {
 }
 pub(crate) use impl_identifiable_for;
 
+#[derive(Debug)]
+pub enum FetchError {
+    Serialization(serde_json::Error),
+    Networking(reqwest::Error)
+}
+
+impl From<serde_json::Error> for FetchError {
+    fn from(e: serde_json::Error) -> Self {
+        FetchError::Serialization(e)
+    }
+}
+
+impl From<reqwest::Error> for FetchError {
+    fn from(e: reqwest::Error) -> Self {
+        FetchError::Networking(e)
+    }
+}
+
 pub struct Manager<T> {
     config: Config,
     client: reqwest::Client,
@@ -96,7 +114,7 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
         response.unwrap().status().is_success()
     }
 
-    async fn get_objects(&self, source: Source, path: &str) -> Result<Vec<T>, reqwest::Error> {
+    async fn get_objects(&self, source: Source, path: &str) -> Result<Vec<T>, FetchError> {
         let client = &self.client;
         let url = format!("{}/{}", source.url, path);
         let response = client.get(&url).send().await;
@@ -117,17 +135,17 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
                 }
                 Err(error) => {
                     eprintln!("Deserialization error: {}", error);
-                    panic!("Deserialization failed.") // TODO: Report an internal server error
+                    Err(FetchError::from(error))
                 }
             }
             Err(error) => {
                 eprintln!("Error: {}", error);
-                Err(error)
+                Err(FetchError::from(error))
             }
         }
     }
 
-    pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<reqwest::Error>) {
+    pub async fn dispatch(&self, path: &str) -> (Vec<T>, Vec<FetchError>) {
         let results = futures::stream::iter(self.config.sources.clone())
             // create a stream of futures
             .map(|source| async { self.get_objects(source, path) })
@@ -135,7 +153,7 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
             .buffer_unordered(CONCURRENT_REQUESTS);
 
         // merges the Vec<T> from the different sources into a single Vec<T>
-        let (successes, failures): (Vec<T>, Vec<reqwest::Error>) = results
+        let (successes, failures): (Vec<T>, Vec<FetchError>) = results
             .fold((Vec::new(), Vec::new()), |mut acc, list| async {
                 match list.await {
                     Ok(list) => acc.0.extend(list),
