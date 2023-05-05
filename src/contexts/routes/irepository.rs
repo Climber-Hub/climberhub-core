@@ -21,7 +21,7 @@ pub mod post
     #[async_trait]
     pub trait IRepository : Send + Sync
     {
-        async fn create(&self, route_data: RouteData) -> Result<Route, CreateError>;
+        async fn create(&self, data: RouteData) -> Result<Route, CreateError>;
     }
 }
 

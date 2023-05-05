@@ -6,7 +6,7 @@ use rocket_okapi::{
 
 use crate::contexts::
 {
-    places::use_cases::UseCase         as PlaceUseCase,
+    places::use_cases::get::UseCase    as PlaceGetUseCase,
     routes::use_cases::get::UseCase    as RouteGetUseCase,
     routes::use_cases::post::UseCase   as RoutePostUseCase,
     routes::use_cases::put::UseCase    as RoutePutUseCase,
@@ -22,7 +22,7 @@ pub struct Server
 impl Server
 {
     pub fn new(
-        place_uc      : PlaceUseCase,
+        place_uc      : PlaceGetUseCase,
         route_get_uc  : RouteGetUseCase,
         route_post_uc : RoutePostUseCase,
         route_put_uc  : RoutePutUseCase,
@@ -65,7 +65,7 @@ fn build() -> Rocket<Build>
 {
     rocket::build()
     .mount("/", openapi_get_routes![
-        crate::contexts::places::router::get_places,
+        crate::contexts::places::router::get::get_all_places,
         crate::contexts::users::router::get_users,
         crate::contexts::routes::router::get::get_all_routes,
         crate::contexts::routes::router::get::get_route,

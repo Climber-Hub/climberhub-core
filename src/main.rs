@@ -14,7 +14,7 @@ use repositories::
 
 use contexts::
 {
-    places::use_cases::UseCase         as PlaceUseCase,
+    places::use_cases::get::UseCase    as PlaceGetUseCase,
     routes::use_cases::get::UseCase    as RouteGetUseCase,
     routes::use_cases::post::UseCase   as RoutePostUseCase,
     routes::use_cases::put::UseCase    as RoutePutUseCase,
@@ -26,7 +26,7 @@ fn main()
 {
     // TODO: This is not ideal to have multiple instance of the same repository, should think about sharing repo between use_cases
     Server::new(
-        PlaceUseCase::new(Box::new(PlaceRepository::default())),
+        PlaceGetUseCase::new(Box::new(PlaceRepository::default())),
         RouteGetUseCase::new(Box::new(RouteRepository)),
         RoutePostUseCase::new(Box::new(RouteRepository)),
         RoutePutUseCase::new(Box::new(RouteRepository)),
