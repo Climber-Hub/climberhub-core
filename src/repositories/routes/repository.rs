@@ -1,14 +1,11 @@
 use std::collections::HashMap;
+use async_trait::async_trait;
+
 use crate::repositories::{
     common::{impl_identifiable_for, Identifiable, Manager},
     config::Config,
 };
-
-use crate::contexts::routes::{ irepository, domain };
-use crate::errors::get::{
-    IdError as GetIdError, 
-    Error   as GetError,
-};
+use crate::contexts::routes::{irepository, domain};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Rules {
@@ -32,8 +29,7 @@ pub struct Route {
 impl_identifiable_for!(Route);
 
 mod domain_to_repository {
-    use super::{Route, Rules};
-    use crate::contexts::routes::domain;
+    use super::{Route, Rules, domain};
 
     pub fn route(r: domain::Route) -> Route {
         Route {
@@ -78,42 +74,46 @@ mod domain_to_repository {
 }
 
 mod repository_to_domain {
-    use super::{Route, Rules, HashMap};
-    use crate::contexts::routes::domain;
+    use super::{Route, Rules, HashMap, domain};
 
     pub fn route(r: Route) -> domain::Route {
         domain::Route {
-            id: r.id,
-            data: domain::RouteData {
-                name: r.name,
-                description: r.description,
-                grade: r.grade,
-                color: r.color,
-                sector: r.sector,
-                rules: domain::Rules {
-                    sitstart: r.rules.sitstart,
-                    modules_allowed: r.rules.modules_allowed,
-                    edges_allowed: r.rules.edges_allowed,
-                },
-                tags: r.tags,
-                properties: r.properties,
+            id   : r.id,
+            data : domain::RouteData {
+                name        : r.name,
+                description : r.description,
+                grade       : r.grade,
+                color       : r.color,
+                sector      : r.sector,
+                rules       : rules(r.rules),
+                tags        : r.tags,
+                properties  : r.properties,
             }
+        }
+    }
+    
+    fn rules(r: Rules) -> domain::Rules
+    {
+        domain::Rules {
+            sitstart        : r.sitstart,
+            modules_allowed : r.modules_allowed,
+            edges_allowed   : r.edges_allowed,
         }
     }
 
     pub fn get_filters(f: Vec<(String, String)>) -> domain::get::Filters {
         let mut filters = domain::get::Filters {
-            min_grade: None,
-            max_grade: None,
-            tags: Vec::new(),
-            properties: HashMap::new(),
+            min_grade  : None,
+            max_grade  : None,
+            tags       : Vec::new(),
+            properties : HashMap::new(),
         };
 
         for (key, value) in f {
             match key.as_str() {
                 "min_grade" => filters.min_grade = Some(value),
                 "max_grade" => filters.max_grade = Some(value),
-                "tag" => filters.tags.push(value),
+                "tag"       => filters.tags.push(value),
                 // may need to be handled differently
                 _ => { let _ = filters.properties.insert(key, value); },
             };
@@ -135,24 +135,24 @@ impl Default for Repository {
     }
 }
 
-use tokio; // little hack to compile while waiting for async trait methods
+use crate::errors::{GetError, GetAllError};
+#[async_trait]
 impl irepository::get::IRepository for Repository
 {
-    #[tokio::main]
-    async fn get_routes(&self, filters: domain::get::Filters) -> Result<Vec<domain::Route>, GetError> 
+    async fn get_all(&self, filters: domain::get::Filters) -> Result<Vec<domain::Route>, GetAllError> 
     {
         let filters = domain_to_repository::get_filters(filters);
         let path = "routes";
         let (routes, errors) = self.manager.dispatch(&path).await;
 
         if routes.is_empty() {
-            Err(panic!("GetError doesn't have any variants yet"))
+            Err(GetAllError::InternalServerError)
         } else {
             Ok(routes.into_iter().map(|r| repository_to_domain::route(r)).collect())
         }
     }
     
-    fn get_route_by_id(&self, id: domain::RouteId) -> Result<domain::Route, GetIdError> 
+    async fn get(&self, id: domain::RouteId) -> Result<domain::Route, GetError> 
     {
         unimplemented!("get_route_by_id")
         // // Err(NonExistingId(id))
@@ -176,12 +176,13 @@ impl irepository::get::IRepository for Repository
     }
 }
 
-use crate::errors::post::Error as PostError;
+use crate::errors::CreateError;
+#[async_trait]
 impl irepository::post::IRepository for Repository
 {
-    fn create_route(&self, route_data: domain::RouteData) -> Result<domain::Route, PostError>
+    async fn create(&self, data: domain::RouteData) -> Result<domain::Route, CreateError>
     {
-        unimplemented!("create_route")
+        unimplemented!("create")
         // Ok(domain::Route
         // {
         //     id   : domain::RouteId::from("0"),
@@ -190,24 +191,24 @@ impl irepository::post::IRepository for Repository
     }
 }
 
-use crate::errors::put::Error as PutError;
+use crate::errors::UpdateError;
+#[async_trait]
 impl irepository::put::IRepository for Repository
 {
-    fn update_route(&self, _id: domain::RouteId, _data: domain::RouteData) -> Result<(), PutError> 
+    async fn update(&self, _id: domain::RouteId, _data: domain::RouteData) -> Result<(), UpdateError> 
     {
-        unimplemented!("update_route")
-        // Ok(())
-        // // Err(PutError::NonExistingId(_id))
+        unimplemented!("update")
+        // Err(NonExistingId(_id))
     }
 }
 
-use crate::errors::delete::Error as DeleteError;
+use crate::errors::DeleteError;
+#[async_trait]
 impl irepository::delete::IRepository for Repository
 {
-    fn delete_route(&self, _id: domain::RouteId) -> Result<(), DeleteError> 
+    async fn delete(&self, _id: domain::RouteId) -> Result<(), DeleteError> 
     {
-        unimplemented!("delete_route")
-        // Ok(())
-        // // Err(PutError::NonExistingId(_id))
+        unimplemented!("delete")
+        // Err(NonExistingId(_id))
     }
 }

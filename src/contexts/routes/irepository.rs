@@ -1,44 +1,52 @@
 pub mod get
 {
-    use crate::errors::get::{Error, IdError};
-
+    use async_trait::async_trait;
+    use crate::errors::{GetAllError, GetError};
     use super::super::domain::{get::Filters, Route, RouteId};
-    pub trait IRepository
+
+    #[async_trait]
+    pub trait IRepository : Send + Sync
     {
-        fn get_routes(&self, filters: Filters) -> Result<Vec<Route>, Error>;
-        fn get_route_by_id(&self, id: RouteId) -> Result<Route, IdError>;
+        async fn get_all(&self, filters: Filters) -> Result<Vec<Route>, GetAllError>;
+        async fn get(&self, id: RouteId) -> Result<Route, GetError>;
     }
 }
 
 pub mod post
 {
-    use crate::errors::post::Error;
-
+    use async_trait::async_trait;
+    use crate::errors::CreateError;
     use super::super::domain::{RouteData, Route};
-    pub trait IRepository
+
+    #[async_trait]
+    pub trait IRepository : Send + Sync
     {
-        fn create_route(&self, route_data: RouteData) -> Result<Route, Error>;
+        async fn create(&self, data: RouteData) -> Result<Route, CreateError>;
     }
 }
 
 pub mod put
 {
-    use crate::errors::put::Error;
-
+    use async_trait::async_trait;
+    use crate::errors::UpdateError;
     use super::super::domain::{RouteId, RouteData};
-    pub trait IRepository
+
+    #[async_trait]
+    pub trait IRepository : Send + Sync
     {
-        fn update_route(&self, id: RouteId, data: RouteData) -> Result<(), Error>;
+        async fn update(&self, id: RouteId, data: RouteData) -> Result<(), UpdateError>;
     }
 }
 
 pub mod delete
 {
-    use crate::errors::delete::Error;
-
+    use async_trait::async_trait;
+    use crate::errors::DeleteError;
     use super::super::domain::RouteId;
-    pub trait IRepository
+
+    #[async_trait]
+    pub trait IRepository : Send + Sync
     {
-        fn delete_route(&self, id: RouteId) -> Result<(), Error>;
+        async fn delete(&self, id: RouteId) -> Result<(), DeleteError>;
     }
 }

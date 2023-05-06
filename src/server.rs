@@ -6,12 +6,11 @@ use rocket_okapi::{
 
 use crate::contexts::
 {
-    places::use_cases::UseCase         as PlaceUseCase,
+    places::use_cases::get::UseCase    as PlaceGetUseCase,
     routes::use_cases::get::UseCase    as RouteGetUseCase,
     routes::use_cases::post::UseCase   as RoutePostUseCase,
     routes::use_cases::put::UseCase    as RoutePutUseCase,
     routes::use_cases::delete::UseCase as RouteDeleteUseCase,
-    users::use_cases::UseCase          as UserUseCase,
 };
 
 pub struct Server
@@ -22,22 +21,20 @@ pub struct Server
 impl Server
 {
     pub fn new(
-        place_uc      : PlaceUseCase,
+        place_get_uc  : PlaceGetUseCase,
         route_get_uc  : RouteGetUseCase,
         route_post_uc : RoutePostUseCase,
         route_put_uc  : RoutePutUseCase,
         route_del_uc  : RouteDeleteUseCase,
-        user_uc       : UserUseCase,
     ) -> Self
     {
         Server {
             rocket_build: build()
-                .manage(place_uc)
+                .manage(place_get_uc)
                 .manage(route_get_uc)
                 .manage(route_post_uc)
                 .manage(route_put_uc)
                 .manage(route_del_uc)
-                .manage(user_uc)
         }
     }
 
@@ -65,10 +62,9 @@ fn build() -> Rocket<Build>
 {
     rocket::build()
     .mount("/", openapi_get_routes![
-        crate::contexts::places::router::get_places,
-        crate::contexts::users::router::get_users,
-        crate::contexts::routes::router::get::get_routes,
-        crate::contexts::routes::router::get::get_route_by_id,
+        crate::contexts::places::router::get::get_all_places,
+        crate::contexts::routes::router::get::get_all_routes,
+        crate::contexts::routes::router::get::get_route,
         crate::contexts::routes::router::post::create_route,
         crate::contexts::routes::router::put::update_route,
         crate::contexts::routes::router::delete::delete_route,

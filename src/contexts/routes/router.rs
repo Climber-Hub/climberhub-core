@@ -17,20 +17,20 @@ pub mod get
 
     use std::collections::HashMap;
 
-    use crate::errors::get::{Error, IdError};
+    use crate::errors::{GetAllError, GetError};
 
     /// # Get the route that has the given id
     ///
     /// Returns the route that has the given id.
     #[openapi(tag = "routes")]
     #[get("/routes/<id>")]
-    pub fn get_route_by_id(id: RouteId, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
+    pub async fn get_route(id: RouteId, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
     {
-        match use_case.get_route_by_id(router_to_domain::route_id(id))
+        match use_case.get(router_to_domain::route_id(id)).await
         {
             Ok(route) => Ok(Json(domain_to_router::route(route))),
-            Err(IdError::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("Route with id `{id}` was not found."))),
-            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in get_route_by_id()"))),
+            Err(GetError::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("Route with id `{id}` was not found."))),
+            Err(GetError::InternalServerError) => Err(Custom(Status::InternalServerError, String::from("Internal Server Error"))),
         }
     }
 
@@ -39,12 +39,12 @@ pub mod get
     /// Returns all routes that match the given filters.
     #[openapi(tag = "routes")]
     #[get("/routes?<filters..>")]
-    pub fn get_routes(filters: Filters, use_case: &State<UseCase>) -> Result<Json<Vec<Route>>, Custom<String>>
+    pub async fn get_all_routes(filters: Filters, use_case: &State<UseCase>) -> Result<Json<Vec<Route>>, Custom<String>>
     {
-        match use_case.get_routes(router_to_domain::get::filters(filters))
+        match use_case.get_all(router_to_domain::get::filters(filters)).await
         {
             Ok(routes) => Ok(Json(routes.into_iter().map(domain_to_router::route).collect())),
-            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in get_routes()"))),
+            Err(GetAllError::InternalServerError) => Err(Custom(Status::InternalServerError, String::from("Internal Server Error"))),
         } 
     }
 
@@ -66,6 +66,8 @@ pub mod post
     use rocket::{post, serde::json::Json, State};
     use rocket_okapi::openapi;
 
+    use crate::errors::CreateError;
+
     use super::super::{use_cases::post::UseCase, domain_to_router, router_to_domain};
 
     use super::{RouteData, Route};
@@ -75,12 +77,12 @@ pub mod post
     /// Returns the newly created route with an associated id
     #[openapi(tag = "routes")]
     #[post("/routes", data = "<route_data>")]
-    pub fn create_route(route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
+    pub async fn create_route(route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
     {
-        match use_case.create_route(router_to_domain::route_data(route_data.into_inner()))
+        match use_case.create(router_to_domain::route_data(route_data.into_inner())).await
         {
             Ok(route) => Ok(Json(domain_to_router::route(route))),
-            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in create_route()"))),
+            Err(CreateError::InternalServerError) => Err(Custom(Status::InternalServerError, String::from("Internal Server Error"))),
         }
     }
 }
@@ -92,7 +94,7 @@ pub mod put
     use rocket::{put, serde::json::Json, State};
     use rocket_okapi::openapi;
 
-    use crate::errors::put::Error;
+    use crate::errors::UpdateError;
 
     use super::super::{use_cases::put::UseCase, router_to_domain};
 
@@ -101,14 +103,14 @@ pub mod put
     /// # Update an existing route
     #[openapi(tag = "routes")]
     #[put("/routes/<id>", data = "<route_data>")]
-    pub fn update_route(id: RouteId, route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
+    pub async fn update_route(id: RouteId, route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {
         
-        match use_case.update_route(router_to_domain::route_id(id), router_to_domain::route_data(route_data.into_inner()))
+        match use_case.update(router_to_domain::route_id(id), router_to_domain::route_data(route_data.into_inner())).await
         {
             Ok(()) => Ok(status::NoContent),
-            Err(Error::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
-            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in update_route()"))),
+            Err(UpdateError::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
+            Err(UpdateError::InternalServerError) => Err(Custom(Status::InternalServerError, String::from("Internal Server Error"))),
         }
     }
 }
@@ -120,7 +122,7 @@ pub mod delete
     use rocket::{delete, State};
     use rocket_okapi::openapi;
 
-    use crate::errors::delete::Error;
+    use crate::errors::DeleteError;
 
     use super::super::{use_cases::delete::UseCase, router_to_domain};
 
@@ -129,14 +131,14 @@ pub mod delete
     /// # Delete an existing route
     #[openapi(tag = "routes")]
     #[delete("/routes/<id>")]
-    pub fn delete_route(id: RouteId, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
+    pub async fn delete_route(id: RouteId, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {
         
-        match use_case.delete_route(router_to_domain::route_id(id))
+        match use_case.delete(router_to_domain::route_id(id)).await
         {
             Ok(()) => Ok(status::NoContent),
-            Err(Error::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
-            Err(_) => Err(Custom(Status::InternalServerError, String::from("An error occured in update_route()"))),
+            Err(DeleteError::NonExistingId(id)) => Err(Custom(Status::NotFound, format!("No existing route with id `{id}`."))),
+            Err(DeleteError::InternalServerError) => Err(Custom(Status::InternalServerError, String::from("Internal Server Error"))),
         }
     }
 }

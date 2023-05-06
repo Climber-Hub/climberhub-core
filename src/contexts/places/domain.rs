@@ -1,6 +1,13 @@
-pub struct Place 
+#[derive(Debug)]
+pub struct Place
 {
-    pub id          : String,
+    pub id   : PlaceId,
+    pub data : PlaceData,
+}
+pub type PlaceId = String;
+#[derive(Debug)]
+pub struct PlaceData
+{
     pub name        : String,
     pub description : String,
     pub address     : String,
@@ -9,8 +16,12 @@ pub struct Place
     pub country     : String,
 }
 
-pub struct Filters
+pub mod get
 {
-    pub country : Option<String>,
-    pub city    : Option<String>,
+    #[derive(Debug)]
+    pub struct Filters
+    {
+        pub country : Option<String>,
+        pub city    : Option<String>,
+    }
 }

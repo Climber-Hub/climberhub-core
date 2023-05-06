@@ -1,4 +1,4 @@
-use crate::contexts::places::{domain, irepository::IRepository};
+use crate::contexts::places::{domain, irepository};
 use crate::repositories::{
     common::{impl_identifiable_for, Identifiable, Manager},
     config::Config,
@@ -22,18 +22,20 @@ mod repository_to_domain {
 
     pub fn place(p: Place) -> domain::Place {
         domain::Place {
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            address: p.address,
-            postcode: p.postcode,
-            city: p.city,
-            country: p.country,
+            id   : p.id,
+            data : domain::PlaceData {
+                name        : p.name,
+                description : p.description,
+                address     : p.address,
+                postcode    : p.postcode,
+                city        : p.city,
+                country     : p.country,
+            }
         }
     }
 
-    pub fn filters(f: Vec<(String, String)>) -> domain::Filters {
-        let mut filters = domain::Filters {
+    pub fn filters(f: Vec<(String, String)>) -> domain::get::Filters {
+        let mut filters = domain::get::Filters {
             country: None,
             city: None,
         };
@@ -55,17 +57,17 @@ mod domain_to_repository {
 
     pub fn place(p: domain::Place) -> Place {
         Place {
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            address: p.address,
-            postcode: p.postcode,
-            city: p.city,
-            country: p.country,
+            id          : p.id,
+            name        : p.data.name,
+            description : p.data.description,
+            address     : p.data.address,
+            postcode    : p.data.postcode,
+            city        : p.data.city,
+            country     : p.data.country,
         }
     }
 
-    pub fn filters(f: domain::Filters) -> Vec<(String, String)> {
+    pub fn filters(f: domain::get::Filters) -> Vec<(String, String)> {
         let mut filters = Vec::new();
 
         if let Some(country) = f.country {
@@ -92,8 +94,12 @@ impl Default for Repository {
 }
 
 #[async_trait::async_trait]
-impl IRepository for Repository {
-    async fn get_places(&self, filters: domain::Filters) -> Vec<domain::Place> {
+impl irepository::get::IRepository for Repository {
+    async fn get(&self, id: domain::PlaceId) -> Result<domain::Place, crate::errors::GetError> {
+        todo!()
+    }
+
+    async fn get_all(&self, filters: domain::get::Filters) -> Result<Vec<domain::Place>, crate::errors::GetAllError> {
         let path = "places";
         let (places, errors) = self.manager.dispatch(&path).await;
 
@@ -102,27 +108,27 @@ impl IRepository for Repository {
             eprintln!("{:#?}", e);
         }
 
-        places
+        let places_list = places
             .into_iter()
             .map(|p|  repository_to_domain::place(p.clone()))
-            .collect()
+            .collect();
+
+        Ok(places_list)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use irepository::get::IRepository;
     use crate::repositories::{common::RelativeId, config::Source};
 
     impl Repository {
-        pub async fn get_all(&self) -> Vec<Place> {
+        pub async fn get_all_routes(&self) -> Vec<Place> {
             return self
-                .get_places(domain::Filters {
-                    country: None,
-                    city: None,
-                }).await
+                .get_all(domain::get::Filters { country: None, city: None }).await
                 .into_iter()
-                .map(|p| domain_to_repository::place(p))
+                .map(domain_to_repository::place)
                 .collect()
         }
     }
@@ -232,7 +238,7 @@ mod tests {
         let manager = Manager::<Place>::new(config, reqwest::Client::new());
         let repo = Repository { manager };
 
-        let places = repo.get_all().await;
+        let places = repo.get_all_routes().await;
 
         // assert all places are present
         assert_eq!(places.len(), PLACES_COUNT);
