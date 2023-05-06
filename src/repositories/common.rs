@@ -4,6 +4,31 @@ use reqwest;
 
 const CONCURRENT_REQUESTS: usize = 10;
 
+pub type FilterList = Vec<(String, String)>;
+/// Incorporate filters of the list in the path to form an HTTP request.
+/// 
+/// Ex: path?name1=value1&name2=value2
+pub fn path_with_filters(path: &str, filters_list: FilterList) -> String
+{
+    let mut complete_path = String::from(path);
+    if ! filters_list.is_empty()
+    { // Add the given filters to the path
+        complete_path.push('?');
+        let mut filters_iter = filters_list.iter();
+        let (key, value) = filters_iter.next().unwrap(); // It is safe to call unwrap because we already checked that there is at least one element
+        complete_path.push_str(&format!("{key}={value}"));
+        
+        for (key, value) in filters_iter
+        {
+            complete_path.push('&');
+            complete_path.push_str(&format!("{key}={value}"));
+        }
+    }
+
+    complete_path
+}
+
+
 pub struct RelativeId {
     pub source_id: u16,
     pub resource_id: u32,
@@ -168,6 +193,7 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
     async fn get_objects(&self, source: Source, path: &str) -> Result<Vec<T>, FetchError> {
         let client = &self.client;
         let url = format!("{}/{}", source.url, path);
+        println!("GET {url}");
         let response = client.get(&url).send().await;
         let body = match response {
             Ok(response) => response.text().await,

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 
 use crate::repositories::{
-    common::{impl_identifiable_for, Identifiable, Manager},
+    common::{self, impl_identifiable_for, Identifiable, Manager, FilterList},
     config::Config,
 };
 use crate::contexts::routes::{irepository, domain};
@@ -29,7 +29,7 @@ pub struct Route {
 impl_identifiable_for!(Route);
 
 mod domain_to_repository {
-    use super::{Route, Rules, domain};
+    use super::{domain, Route, Rules, FilterList};
 
     pub fn route(r: domain::Route) -> Route {
         Route {
@@ -49,8 +49,8 @@ mod domain_to_repository {
         }
     }
 
-    pub fn get_filters(f: domain::get::Filters) -> Vec<(String, String)> {
-        let mut filters = Vec::new();
+    pub fn get_filters(f: domain::get::Filters) -> FilterList {
+        let mut filters = FilterList::new();
 
         if let Some(min_grade) = f.min_grade {
             filters.push((String::from("min_grade"), min_grade));
@@ -61,12 +61,12 @@ mod domain_to_repository {
         }
 
         for tag in f.tags {
-            filters.push((String::from("tag"), tag));
+            filters.push((String::from("tags"), tag));
         }
 
         // may need to be handled differently
         for (key, value) in f.properties {
-            filters.push((key, value));
+            filters.push((format!("properties.{key}"), value));
         }
 
         filters
@@ -74,7 +74,7 @@ mod domain_to_repository {
 }
 
 mod repository_to_domain {
-    use super::{Route, Rules, HashMap, domain};
+    use super::{Route, Rules, HashMap, domain, FilterList};
 
     pub fn route(r: Route) -> domain::Route {
         domain::Route {
@@ -101,7 +101,7 @@ mod repository_to_domain {
         }
     }
 
-    pub fn get_filters(f: Vec<(String, String)>) -> domain::get::Filters {
+    pub fn get_filters(f: FilterList) -> domain::get::Filters {
         let mut filters = domain::get::Filters {
             min_grade  : None,
             max_grade  : None,
@@ -113,9 +113,13 @@ mod repository_to_domain {
             match key.as_str() {
                 "min_grade" => filters.min_grade = Some(value),
                 "max_grade" => filters.max_grade = Some(value),
-                "tag"       => filters.tags.push(value),
+                "tags"      => filters.tags.push(value),
                 // may need to be handled differently
-                _ => { let _ = filters.properties.insert(key, value); },
+                prop if prop.starts_with("properties.") => 
+                {
+                    filters.properties.insert(key["properties.".len()..].to_string(), value);
+                },
+                _ => panic!("Unknown filter."),
             };
         }
 
@@ -141,9 +145,8 @@ impl irepository::get::IRepository for Repository
 {
     async fn get_all(&self, filters: domain::get::Filters) -> Result<Vec<domain::Route>, GetAllError> 
     {
-        let filters = domain_to_repository::get_filters(filters);
-        let path = "routes";
-        let (routes, errors) = self.manager.dispatch(&path).await;
+        let (routes, _errors) = self.manager.dispatch(
+            common::path_with_filters("routes", domain_to_repository::get_filters(filters)).as_str()).await;
 
         if routes.is_empty() {
             Err(GetAllError::InternalServerError)
