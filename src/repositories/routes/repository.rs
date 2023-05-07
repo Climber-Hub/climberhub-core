@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 
 use crate::repositories::{
-    common::{self, impl_identifiable_for, Identifiable, Manager, FilterList},
+    common::{self, impl_identifiable_for, Identifiable, Manager, FilterList, RelativeId, FetchError},
     config::Config,
 };
 use crate::contexts::routes::{irepository, domain};
@@ -157,25 +157,20 @@ impl irepository::get::IRepository for Repository
     
     async fn get(&self, id: domain::RouteId) -> Result<domain::Route, GetError> 
     {
-        unimplemented!("get_route_by_id")
-        // // Err(NonExistingId(id))
-        // Ok(domain::Route {
-        //     id   : id,
-        //     data : domain::RouteData {
-        //         name        : String::new(),
-        //         description : String::new(),
-        //         grade       : String::from("4c"),
-        //         color       : String::from("black"),
-        //         sector      : String::new(),
-        //         rules       : domain::Rules {
-        //             sitstart        : false,
-        //             modules_allowed : false,
-        //             edges_allowed   : false,
-        //         },
-        //         tags        : vec![],
-        //         properties  : HashMap::new(),
-        //     }
-        // })
+        let RelativeId{source_id, resource_id} = RelativeId::from_str(id.as_str());
+        match self.manager.get(source_id, format!("routes/{resource_id}").as_str()).await
+        {
+            Ok(route) => Ok(repository_to_domain::route(route)),
+            Err(e) => 
+            {
+                eprintln!("{e:?}");
+                match e 
+                {
+                    FetchError::Networking(_)    => Err(GetError::NonExistingId(id)),
+                    FetchError::Serialization(_) => Err(GetError::InternalServerError),
+                }
+            },
+        }
     }
 }
 
