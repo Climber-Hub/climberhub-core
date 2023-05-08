@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
-
 use super::super::places::domain::PlaceId;
 
 pub type RouteProperties = HashMap<String, String>;
 pub type RouteId = String;
-pub type Date = DateTime<Utc>;
+pub type Date = chrono::NaiveDate;
 
 #[derive(Debug)]
 pub struct RouteData

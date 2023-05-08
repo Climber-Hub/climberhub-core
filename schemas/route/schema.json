@@ -21,8 +21,8 @@
     "grade"        : {"type": "string"},
     "color"        : {"type": "string"},
     "sector"       : {"type": "string"},
-    "opening_date" : {"type": "string", "format": "date-time"},
-    "closing_date" : {"type": ["string", "null"], "format": "date-time"},
+    "opening_date" : {"type": "string", "format": "date"},
+    "closing_date" : {"type": ["string", "null"], "format": "date"},
     "rules"        : {"$ref": "#/definitions/Rules"},
     "tags"         : {"type": "array", "items": {"type": "string"}},
     "properties"   : {"type": "object", "additionalProperties": {"type": "string"}}

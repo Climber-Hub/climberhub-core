@@ -6,15 +6,15 @@ pub mod routers
         okapi::schemars::{gen::SchemaGenerator, schema::{Schema, SchemaObject, InstanceType}}
     };
     use serde::{Serialize, Deserialize};
-    use chrono::{DateTime, Utc};
+    use chrono::{NaiveDate};
 
     #[derive(Serialize, Deserialize, Debug)]
     #[serde(rename_all = "camelCase")]
-    pub struct Date(pub DateTime<Utc>);
+    pub struct Date(pub NaiveDate);
 
     impl std::ops::Deref for Date
     {
-        type Target = DateTime<Utc>;
+        type Target = NaiveDate;
         fn deref(&self) -> &Self::Target { &self.0 }
     }
 
@@ -22,7 +22,7 @@ pub mod routers
     {
         fn from_value(field: rocket::form::ValueField<'r>) -> rocket::form::Result<'r, Self> 
         {
-            match DateTime::parse_from_rfc3339(field.value)
+            match field.value.parse::<NaiveDate>()
             {
                 Ok(date) => Ok(Date(date.into())),
                 Err(_) => panic!(),
@@ -37,7 +37,7 @@ pub mod routers
         {
             SchemaObject {
                 instance_type : Some(InstanceType::String.into()),
-                format        : Some("date-time".to_owned()),
+                format        : Some("date".to_owned()),
                 ..Default::default()
             }.into()
         }
@@ -47,14 +47,14 @@ pub mod routers
 pub mod repositories
 {
     use serde::{Serialize, Deserialize};
-    use chrono::{DateTime, Utc};
+    use chrono::{NaiveDate};
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Date(pub DateTime<Utc>);
+    pub struct Date(pub NaiveDate);
 
     impl std::ops::Deref for Date
     {
-        type Target = DateTime<Utc>;
+        type Target = NaiveDate;
         fn deref(&self) -> &Self::Target { &self.0 }
     }
 }

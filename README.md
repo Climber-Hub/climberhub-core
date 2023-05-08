@@ -63,7 +63,7 @@ GET /routes/
             "modules_allowed" : false,
             "edges_allowed"   : false
         ],
-        "opening_date" : "2021-01-01T10:30:00Z",
+        "opening_date" : "2021-01-01",
         "closing_date" : null,
         "tags": [
             "vertical",
