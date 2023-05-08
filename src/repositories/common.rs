@@ -1,6 +1,6 @@
 use super::config::{Config, Source};
 use futures::stream::StreamExt;
-use reqwest;
+use reqwest::{self, StatusCode};
 
 const CONCURRENT_REQUESTS: usize = 10;
 
@@ -69,7 +69,8 @@ pub(crate) use impl_identifiable_for;
 #[derive(Debug)]
 pub enum FetchError {
     Serialization(serde_json::Error),
-    Networking(reqwest::Error)
+    Networking(reqwest::Error),
+    Internal,
 }
 
 impl From<serde_json::Error> for FetchError {
@@ -110,37 +111,23 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
         *object.id() = RelativeId::from_str(&object.id()).resource_id.to_string();
     }
 
-    pub async fn get(&self, source_id: u16, path: &str) -> Result<T, FetchError> {
+    pub async fn get(&self, source_id: u16, path: &str) -> Result<Option<T>, FetchError> 
+    {
         let source = self.config.get_source(source_id).expect(&format!("Couldn't find a source with id {}", source_id));
         let url = format!("{}/{}", source.url, path);
-        let response = self.client.get(&url).send().await;
+        let response = self.client.get(&url).send().await?; 
         
-        let body = match response {
-            Ok(response) => {
-                match response.text().await {
-                    Ok(body) => body,
-                    Err(error) => {
-                        eprintln!("Error: {}", error);
-                        return Err(FetchError::from(error));
-                    }
-                }
+        match response.status() 
+        {
+            ref status if status.is_success() => 
+            {
+                let mut object: T = serde_json::from_str(response.text().await?.as_str())?;
+                self.to_absolute(&mut object, source_id);
+                Ok(Some(object))
             },
-            Err(error) => {
-                eprintln!("Error: {}", error);
-                return Err(FetchError::from(error))
-            }
-        };
-
-        let mut object: T = match serde_json::from_str(&body) {
-            Ok(object) => object,
-            Err(error) => {
-                eprintln!("Deserialization error: {}", error);
-                return Err(FetchError::from(error));
-            }
-        };
-
-        self.to_absolute(&mut object, source_id);
-        Ok(object)
+            StatusCode::NOT_FOUND => Ok(None),
+            _ => Err(FetchError::Internal),
+        }
     }
 
     pub async fn post(&self, source_id: u16, path: &str, object: &mut T, ) -> Result<T, FetchError> {
@@ -176,13 +163,11 @@ impl<T: Identifiable + serde::de::DeserializeOwned + serde::Serialize> Manager<T
         Ok(object)
     }
 
-    pub async fn delete(&self, source_id: u16, path: &str) -> Result<bool, FetchError> {
+    pub async fn delete(&self, source_id: u16, path: &str) -> Result<StatusCode, FetchError> {
         let source = self.config.get_source(source_id).expect(&format!("Couldn't find a source with id {}", source_id));
         let url = format!("{}/{}", source.url, path);
-        let response = self.client.delete(&url).send().await;
-
-        match response {
-            Ok(response) => Ok(response.status().is_success()),
+        match self.client.delete(&url).send().await {
+            Ok(response) => Ok(response.status()),
             Err(error) => {
                 eprintln!("Error: {}", error);
                 Err(FetchError::from(error))

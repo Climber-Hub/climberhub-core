@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use async_trait::async_trait;
+use reqwest::StatusCode;
+use rocket::http::Status;
 
 use crate::repositories::{
     common::{self, impl_identifiable_for, Identifiable, Manager, FilterList, RelativeId, FetchError},
@@ -164,11 +166,7 @@ impl irepository::get::IRepository for Repository
         let (routes, _errors) = self.manager.dispatch(
             common::path_with_filters("routes", domain_to_repository::get_filters(filters)).as_str()).await;
 
-        if routes.is_empty() {
-            Err(GetAllError::InternalServerError)
-        } else {
-            Ok(routes.into_iter().map(|r| repository_to_domain::route(r)).collect())
-        }
+        Ok(routes.into_iter().map(repository_to_domain::route).collect())
     }
     
     async fn get(&self, id: domain::RouteId) -> Result<domain::Route, GetError> 
@@ -176,16 +174,10 @@ impl irepository::get::IRepository for Repository
         let RelativeId{source_id, resource_id} = RelativeId::from_str(id.as_str());
         match self.manager.get(source_id, format!("routes/{resource_id}").as_str()).await
         {
-            Ok(route) => Ok(repository_to_domain::route(route)),
-            Err(e) => 
-            {
-                eprintln!("{e:?}");
-                match e 
-                {
-                    FetchError::Networking(_)    => Err(GetError::NonExistingId(id)),
-                    FetchError::Serialization(_) => Err(GetError::InternalServerError),
-                }
-            },
+            Ok(route_got) => if let Some(route) = route_got 
+                { Ok(repository_to_domain::route(route)) } else 
+                { Err(GetError::NonExistingId(id)) },
+            Err(fetch_err) => { eprintln!("{fetch_err:?}"); Err(GetError::InternalServerError) },
         }
     }
 }
@@ -196,6 +188,7 @@ impl irepository::post::IRepository for Repository
 {
     async fn create(&self, data: domain::RouteData) -> Result<domain::Route, CreateError>
     {
+
         unimplemented!("create")
         // Ok(domain::Route
         // {
@@ -220,9 +213,22 @@ use crate::errors::DeleteError;
 #[async_trait]
 impl irepository::delete::IRepository for Repository
 {
-    async fn delete(&self, _id: domain::RouteId) -> Result<(), DeleteError> 
+    async fn delete(&self, id: domain::RouteId) -> Result<(), DeleteError> 
     {
-        unimplemented!("delete")
-        // Err(NonExistingId(_id))
+        let RelativeId{source_id, resource_id} = RelativeId::from_str(id.as_str());
+        match self.manager.delete(source_id, format!("routes/{resource_id}").as_str()).await
+        {
+            Ok(status) => match status
+            {
+                StatusCode::NOT_FOUND => Err(DeleteError::NonExistingId(id)),
+                _ if status.is_success() => Ok(()),
+                _ => Err(DeleteError::InternalServerError),
+            },
+            Err(fetch_err) => 
+            {
+                eprintln!("{fetch_err:?}");
+                Err(DeleteError::InternalServerError)
+            }
+        }
     }
 }
