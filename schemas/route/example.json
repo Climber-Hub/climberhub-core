@@ -1,0 +1,22 @@
+{
+  "id"           : "1",
+  "place_id"     : "1",
+  "name"         : "Rocky Road",
+  "description"  : "A challenging climb with lots of twists and turns.",
+  "grade"        : "5c",
+  "color"        : "red",
+  "sector"       : "North Wall",
+  "opening_date" : "2021-01-01T10:30:00Z",
+  "closing_date" : null,
+  "rules"        : {
+    "sitstart"        : true,
+    "modules_allowed" : true,
+    "edges_allowed"   : false
+  },
+  "tags": ["challenging", "twisty"],
+  "properties": {
+    "height": "20m",
+    "rating": "5 stars"
+  }
+}
+  

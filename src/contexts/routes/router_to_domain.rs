@@ -3,17 +3,22 @@ use super::{router, domain};
 pub fn route_id(id: router::RouteId) -> domain::RouteId { id }
 pub fn route_data(rd: router::RouteData) -> domain::RouteData
 {
-    domain::RouteData { 
+    domain::RouteData {
+        place_id    : rd.place_id,
         name        : rd.name,
         description : rd.description,
         grade       : rd.grade,
         color       : rd.color,
         sector      : rd.sector,
         rules       : rules(rd.rules),
+        opening_date: date(rd.opening_date),
+        closing_date: rd.closing_date.map(date),
         tags        : rd.tags,
         properties  : rd.properties,
      }
 }
+
+fn date(d: crate::typeutil::routers::Date) -> domain::Date { *d }
 
 pub mod get
 {

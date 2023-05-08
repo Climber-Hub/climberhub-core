@@ -18,7 +18,7 @@ pub mod get
     /// # Get the place that has the given id
     ///
     /// Returns the place that has the given id.
-    #[openapi(tag = "Places")]
+    #[openapi(tag = "Place")]
     #[get("/places/<id>")]
     pub async fn get_place(id: PlaceId, use_case: &State<UseCase>) -> Result<Json<Place>, Custom<String>>
     {
@@ -33,7 +33,7 @@ pub mod get
     /// # Get places that match the given filters
     ///
     /// Returns all places that match the given filters.
-    #[openapi(tag = "Places")]
+    #[openapi(tag = "Place")]
     #[get("/places?<filters..>")]
     pub async fn get_all_places(filters: Filters, use_case: &State<UseCase>) -> Result<Json<Vec<Place>>, Custom<String>>
     {
@@ -69,7 +69,7 @@ pub mod post
     /// # Create a new place with the given data
     ///
     /// Returns the newly created place with an associated id
-    #[openapi(tag = "Places")]
+    #[openapi(tag = "Place")]
     #[post("/places", data = "<route_data>")]
     pub async fn create_place(route_data: Json<PlaceData>, use_case: &State<UseCase>) -> Result<Json<Place>, Custom<String>>
     {
@@ -95,7 +95,7 @@ pub mod put
     use super::{PlaceData, PlaceId};
 
     /// # Update an existing place
-    #[openapi(tag = "Places")]
+    #[openapi(tag = "Place")]
     #[put("/places/<id>", data = "<route_data>")]
     pub async fn update_place(id: PlaceId, route_data: Json<PlaceData>, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {
@@ -123,7 +123,7 @@ pub mod delete
     use super::PlaceId;
 
     /// # Delete an existing place
-    #[openapi(tag = "Places")]
+    #[openapi(tag = "Place")]
     #[delete("/places/<id>")]
     pub async fn delete_place(id: PlaceId, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {

@@ -2,6 +2,7 @@ mod repositories;
 mod server;
 pub mod contexts;
 pub mod errors;
+pub mod typeutil;
 
 use server::Server;
 

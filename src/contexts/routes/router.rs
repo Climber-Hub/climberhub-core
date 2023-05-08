@@ -4,6 +4,8 @@ use rocket::FromForm;
 use rocket_okapi::okapi::schemars::{self, JsonSchema};
 use serde::{Deserialize, Serialize};
 
+use crate::typeutil::routers::Date;
+
 pub mod get
 {
     use rocket::{get, serde::json::Json, State, FromForm, response::status::Custom, http::Status};
@@ -22,7 +24,7 @@ pub mod get
     /// # Get the route that has the given id
     ///
     /// Returns the route that has the given id.
-    #[openapi(tag = "routes")]
+    #[openapi(tag = "Route")]
     #[get("/routes/<id>")]
     pub async fn get_route(id: RouteId, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
     {
@@ -37,7 +39,7 @@ pub mod get
     /// # Get routes that match the given filters
     ///
     /// Returns all routes that match the given filters.
-    #[openapi(tag = "routes")]
+    #[openapi(tag = "Route")]
     #[get("/routes?<filters..>")]
     pub async fn get_all_routes(filters: Filters, use_case: &State<UseCase>) -> Result<Json<Vec<Route>>, Custom<String>>
     {
@@ -75,7 +77,7 @@ pub mod post
     /// # Create a new route with the given data
     ///
     /// Returns the newly created route with an associated id
-    #[openapi(tag = "routes")]
+    #[openapi(tag = "Route")]
     #[post("/routes", data = "<route_data>")]
     pub async fn create_route(route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<Json<Route>, Custom<String>>
     {
@@ -101,7 +103,7 @@ pub mod put
     use super::{RouteData, RouteId};
 
     /// # Update an existing route
-    #[openapi(tag = "routes")]
+    #[openapi(tag = "Route")]
     #[put("/routes/<id>", data = "<route_data>")]
     pub async fn update_route(id: RouteId, route_data: Json<RouteData>, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {
@@ -129,7 +131,7 @@ pub mod delete
     use super::RouteId;
 
     /// # Delete an existing route
-    #[openapi(tag = "routes")]
+    #[openapi(tag = "Route")]
     #[delete("/routes/<id>")]
     pub async fn delete_route(id: RouteId, use_case: &State<UseCase>) -> Result<status::NoContent, Custom<String>>
     {
@@ -143,35 +145,42 @@ pub mod delete
     }
 }
 
-pub type RouteId = String;
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Route
 {
-    pub id          : RouteId,
-    pub name        : String,
-    pub description : String,
-    pub grade       : String,
-    pub color       : String,
-    pub sector      : String,
-    pub rules       : Rules,
-    pub tags        : Vec<String>,
-    pub properties  : HashMap<String, String>,
+    pub id           : RouteId,
+    pub place_id     : PlaceId,
+    pub name         : String,
+    pub description  : String,
+    pub grade        : String,
+    pub color        : String,
+    pub sector       : String,
+    pub opening_date : Date,
+    pub closing_date : Option<Date>,
+    pub rules        : Rules,
+    pub tags         : Vec<String>,
+    pub properties   : HashMap<String, String>,
 }
+pub type RouteId = String;
+pub type PlaceId = String;
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RouteData
 {
-    pub name        : String,
-    pub description : String,
-    pub grade       : String,
-    pub color       : String,
-    pub sector      : String,
-    pub rules       : Rules,
-    pub tags        : Vec<String>,
-    pub properties  : HashMap<String, String>,
+    pub place_id     : PlaceId,
+    pub name         : String,
+    pub description  : String,
+    pub grade        : String,
+    pub color        : String,
+    pub sector       : String,
+    pub opening_date : Date,
+    pub closing_date : Option<Date>,
+    pub rules        : Rules,
+    pub tags         : Vec<String>,
+    pub properties   : HashMap<String, String>,
 }
 
 #[derive(FromForm, Serialize, Deserialize, JsonSchema, Debug)]

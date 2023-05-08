@@ -1,0 +1,31 @@
+{
+"$schema": "http://json-schema.org/draft-07/schema#",
+"definitions": {
+    "Rules": {
+        "type": "object",
+        "properties": {
+        "sitstart"        : {"type": "boolean"},
+        "modules_allowed" : {"type": "boolean"},
+        "edges_allowed"   : {"type": "boolean"}
+        },
+        "required": ["sitstart", "modules_allowed", "edges_allowed"],
+        "additionalProperties": false
+    }
+},
+"type": "object",
+"properties": {
+    "id"           : {"type": "string"},
+    "place_id"     : {"type": "string"},
+    "name"         : {"type": "string"},
+    "description"  : {"type": "string"},
+    "grade"        : {"type": "string"},
+    "color"        : {"type": "string"},
+    "sector"       : {"type": "string"},
+    "opening_date" : {"type": "string", "format": "date-time"},
+    "closing_date" : {"type": ["string", "null"], "format": "date-time"},
+    "rules"        : {"$ref": "#/definitions/Rules"},
+    "tags"         : {"type": "array", "items": {"type": "string"}},
+    "properties"   : {"type": "object", "additionalProperties": {"type": "string"}}
+},
+"required": ["id", "place_id", "name", "description", "grade", "color", "sector", "opening_date", "rules", "tags", "properties"]
+}

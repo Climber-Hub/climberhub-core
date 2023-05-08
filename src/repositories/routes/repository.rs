@@ -5,6 +5,7 @@ use crate::repositories::{
     common::{self, impl_identifiable_for, Identifiable, Manager, FilterList, RelativeId, FetchError},
     config::Config,
 };
+use crate::typeutil::repositories::Date;
 use crate::contexts::routes::{irepository, domain};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -16,36 +17,48 @@ pub struct Rules {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Route {
-    pub id   : String,
-    name        : String,
-    description : String,
-    grade       : String,
-    color       : String,
-    sector      : String,
-    rules       : Rules,
-    tags        : Vec<String>,
-    properties  : HashMap<String, String>,
+    pub id           : String,
+    pub place_id     : String,
+    pub name         : String,
+    pub description  : String,
+    pub grade        : String,
+    pub color        : String,
+    pub sector       : String,
+    pub opening_date : Date,
+    pub closing_date : Option<Date>,
+    pub rules        : Rules,
+    pub tags         : Vec<String>,
+    pub properties   : HashMap<String, String>,
 }
 impl_identifiable_for!(Route);
 
 mod domain_to_repository {
-    use super::{domain, Route, Rules, FilterList};
+    use super::{domain, Date, Route, Rules, FilterList};
 
     pub fn route(r: domain::Route) -> Route {
         Route {
-            id          : r.id,
-            name        : r.data.name,
-            description : r.data.description,
-            grade       : r.data.grade,
-            color       : r.data.color,
-            sector      : r.data.sector,
-            rules       : Rules {
-                sitstart        : r.data.rules.sitstart,
-                modules_allowed : r.data.rules.modules_allowed,
-                edges_allowed   : r.data.rules.edges_allowed,
-            },
-            tags        : r.data.tags,
-            properties  : r.data.properties,
+            id           : r.id,
+            place_id     : r.data.place_id,
+            name         : r.data.name,
+            description  : r.data.description,
+            grade        : r.data.grade,
+            color        : r.data.color,
+            sector       : r.data.sector,
+            rules        : rules(r.data.rules),
+            opening_date : date(r.data.opening_date),
+            closing_date : r.data.closing_date.map(date),
+            tags         : r.data.tags,
+            properties   : r.data.properties,
+        }
+    }
+
+    fn date(d: domain::Date) -> Date { Date(d) }
+    fn rules(r: domain::Rules) -> Rules
+    {
+        Rules {
+            sitstart        : r.sitstart,
+            modules_allowed : r.modules_allowed,
+            edges_allowed   : r.edges_allowed,
         }
     }
 
@@ -74,24 +87,27 @@ mod domain_to_repository {
 }
 
 mod repository_to_domain {
-    use super::{Route, Rules, HashMap, domain, FilterList};
+    use super::{domain, Route, Rules, HashMap, FilterList, Date};
 
     pub fn route(r: Route) -> domain::Route {
         domain::Route {
             id   : r.id,
             data : domain::RouteData {
+                place_id    : r.place_id,
                 name        : r.name,
                 description : r.description,
                 grade       : r.grade,
                 color       : r.color,
                 sector      : r.sector,
                 rules       : rules(r.rules),
+                opening_date: date(r.opening_date),
+                closing_date: r.closing_date.map(date),
                 tags        : r.tags,
                 properties  : r.properties,
             }
         }
     }
-    
+    fn date(d: Date) -> domain::Date { *d }
     fn rules(r: Rules) -> domain::Rules
     {
         domain::Rules {
