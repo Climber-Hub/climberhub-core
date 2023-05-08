@@ -1,0 +1,19 @@
+[[sources]]
+name = "Google"
+id = 1
+url = "https://www.google.fr"
+
+[[sources]]
+name = "Facebook"
+id = 2
+url = "https://www.facebook.com"
+
+[[sources]]
+name = "Twitter"
+id = 3
+url = "https://www.reddit.com"
+
+[[sources]]
+name = "Damien's API"
+id = 4
+url = "http://127.0.0.1:8080"

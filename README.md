@@ -22,61 +22,49 @@ Resources:
 - Progress  : a user's progress on a route
 
 Examples:
-GET /sources
-```json
-[
-    {
-        "uuid": "<uuid of the source>",
-        "name": "PSUC Orsay",
-        "url": "https://www.psuc-orsay.fr/escalade",
-    },
-    {
-        "uuid": "<uuid of the source>",
-        "name": "Escalade 91",
-        "url": "https://www.escalade91.fr/",
-    }
-]
-```
-
 GET /places?country=France
 ```json
 [
     {
-        "uuid": "<uuid of the place>",
-        "name": "COUM",
-        "description": "Centre Omnisport Universitaire de Moulon",
-        "address": "8 rue 128",
-        "postcode": "91190",
-        "city": "Gif-sur-Yvette",
-        "country": "France"
+        "id"          : "1",
+        "name"        : "COUM",
+        "description" : "Centre Omnisport Universitaire de Moulon",
+        "address"     : "8 rue 128",
+        "postcode"    : "91190",
+        "city"        : "Gif-sur-Yvette",
+        "country"     : "France"
     },
     {
-        "uuid": "<uuid of the place>",
-        "name": "Bâtiment 225",
-        "description": "Service Universitaire des Activités Physiques et Sportives Université Paris-Saclay",
-        "address": "225 Rue André Ampère",
-        "postcode": "91440",
-        "city": "Bures-sur-Yvette",
-        "country": "France",   
+        "id"          : "2",
+        "name"        : "Bâtiment 225",
+        "description" : "Service Universitaire des Activités Physiques et Sportives Université Paris-Saclay",
+        "address"     : "225 Rue André Ampère",
+        "postcode"    : "91440",
+        "city"        : "Bures-sur-Yvette",
+        "country"     : "France",   
     }
 ]
 ```
+[See schema](schemas/place/schema.json)
 
 GET /routes/
 ```json
 [
     {
-        "uuid": "<uuid of the route>",
-        "name": "Route 1",
-        "description": "This is a great route",
-        "grade": "6a",
-        "color": "green",
-        "sector": "R1",
-        "rules": [
-            "sitstart": false,
-            "w_modules": false,
-            "w_edges": false
+        "id"          : "1-1",
+        "place_id"    : "1",
+        "name"        : "Route 1",
+        "description" : "This is a great route",
+        "grade"       : "6a",
+        "color"       : "green",
+        "sector"      : "R1",
+        "rules"       : [
+            "sitstart"        : false,
+            "modules_allowed" : false,
+            "edges_allowed"   : false
         ],
+        "opening_date" : "2021-01-01T10:30:00Z",
+        "closing_date" : null,
         "tags": [
             "vertical",
             "overhang",
@@ -90,39 +78,43 @@ GET /routes/
     }
 ]
 ```
+[See schema](schemas/route/schema.json)
 
 GET /comments/:place/:route
 ```json
 [
     {
-        "username": "jdoe",
-        "content": "This route is awesome !",
-        "date": "2018-01-01T00:00:00Z"
+        "username" : "jdoe",
+        "content"  : "This route is awesome !",
+        "date"     : "2018-01-01T00:00:00Z"
     }
 ]
 ```
+[See schema](schemas/comment/schema.json)
 
 GET /progress/:username
 ```json
 [
     {
-        "route": "<uuid of the route>",
-        "sent": true,
-        "flashed": false,
-        "liked": false,
-        "project": true,
+        "route_id" : "3-15",
+        "sent"     : true,
+        "flashed"  : false,
+        "liked"    : false,
+        "project"  : true
     }
 ]
 ```
+[See schema](schemas/progress/schema.json)
 
 GET /users/
 ```json
 [
     {
-        "first_name": "John",
-        "last_name": "Doe",
-        "username": "jdoe",
-        "email": "john.doe@example.com",
+        "first_name" : "John",
+        "last_name"  : "Doe",
+        "username"   : "jdoe",
+        "email"      : "john.doe@example.com"
     }
 ]
 ```
+[See schema](schemas/user/schema.json)
