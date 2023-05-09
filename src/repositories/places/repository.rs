@@ -19,7 +19,11 @@ pub struct Place {
 
 impl Identifiable for Place {
     fn id(&mut self) -> &mut String {
-        self._id.as_mut().expect("Place id is not set")
+        if self._id.is_none() {
+            self._id = Some(self.id.to_string());
+            eprintln!("Casting id to string: {:#?}", self._id);
+        }
+        self._id.as_mut().unwrap()
     }
 }
 
@@ -64,7 +68,7 @@ mod domain_to_repository {
 
     pub fn place(p: domain::Place) -> Place {
         Place {
-            id          : p.id.parse().expect("Place id is not a number"),
+            id          : p.id.parse().expect("Place id may be a RelativeId?"),
             _id         : Some(p.id),
             name        : p.data.name,
             description : p.data.description,
