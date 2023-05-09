@@ -6,7 +6,9 @@ use crate::repositories::{
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Place {
-    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub _id: Option<String>,
+    pub id: u32,
     pub name: String,
     pub description: String,
     pub address: String,
@@ -14,15 +16,20 @@ pub struct Place {
     pub city: String,
     pub country: String,
 }
-impl_identifiable_for!(Place);
+
+impl Identifiable for Place {
+    fn id(&mut self) -> &mut String {
+        self._id.as_mut().expect("Place id is not set")
+    }
+}
 
 mod repository_to_domain {
-    use super::Place;
+    use super::{Place, Identifiable};
     use crate::contexts::places::domain;
 
-    pub fn place(p: Place) -> domain::Place {
+    pub fn place(mut p: Place) -> domain::Place {
         domain::Place {
-            id   : p.id,
+            id   : p.id().to_string(),
             data : domain::PlaceData {
                 name        : p.name,
                 description : p.description,
@@ -57,7 +64,8 @@ mod domain_to_repository {
 
     pub fn place(p: domain::Place) -> Place {
         Place {
-            id          : p.id,
+            id          : p.id.parse().expect("Place id is not a number"),
+            _id         : Some(p.id),
             name        : p.data.name,
             description : p.data.description,
             address     : p.data.address,
